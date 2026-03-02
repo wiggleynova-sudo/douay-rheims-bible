@@ -15,8 +15,6 @@ export default function ParallelPage() {
 
   const book    = getBook(bookId)
   const chapter = getChapter(bookId, chapterN)
-  const vulgate = getVulgateChapter(bookId, chapterN)
-
   const [highlightVerse, setHighlightVerse] = useState<number | null>(null)
 
   const nav = (dir: -1 | 1) => {
@@ -24,87 +22,97 @@ export default function ParallelPage() {
     if (book?.chapters.find(c => c.chapter === newCh)) {
       router.push(`/parallel/${bookId}/${newCh}`)
     } else {
-      const allBooks = BIBLE_BOOKS
-      const idx = allBooks.findIndex(b => b.id === bookId)
-      if (dir === 1 && idx < allBooks.length - 1) {
-        router.push(`/parallel/${allBooks[idx + 1].id}/1`)
-      } else if (dir === -1 && idx > 0) {
-        const prev = allBooks[idx - 1]
+      const idx = BIBLE_BOOKS.findIndex(b => b.id === bookId)
+      if (dir === 1 && idx < BIBLE_BOOKS.length - 1) router.push(`/parallel/${BIBLE_BOOKS[idx + 1].id}/1`)
+      else if (dir === -1 && idx > 0) {
+        const prev = BIBLE_BOOKS[idx - 1]
         router.push(`/parallel/${prev.id}/${prev.chapters[prev.chapters.length - 1].chapter}`)
       }
     }
   }
 
   if (!book || !chapter) return (
-    <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ color: '#8B0000', marginBottom: 12 }}>Book not available in this edition.</div>
-        <Link href="/" style={{ color: '#C9A84C', textDecoration: 'none', fontSize: 12 }}>← Home</Link>
+        <div style={{ fontFamily: 'Cinzel, serif', color: '#7A0E1C', marginBottom: 16 }}>This book is not yet in this edition.</div>
+        <Link href="/" style={{ fontFamily: 'Cinzel, serif', fontSize: 12, color: '#9A7320' }}>← Home</Link>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405' }}>
+
       {/* Header */}
       <header style={{
-        borderBottom: '1px solid #1a1a1a', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-        position: 'sticky', top: 0, background: '#050505', zIndex: 50,
+        background: '#2A1008', borderBottom: '2px solid #9A7320',
+        padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        position: 'sticky', top: 0, zIndex: 50,
       }}>
-        <Link href={`/read/${bookId}/${chapterN}`} style={{ textDecoration: 'none', fontSize: 10, color: '#555', letterSpacing: '0.1em' }}>
-          ← READING VIEW
-        </Link>
-        <span style={{ color: '#1e1e1e' }}>·</span>
-        <span style={{ fontSize: 10, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-          {book.name} {chapterN}
+        <Link href={`/read/${bookId}/${chapterN}`} style={{
+          textDecoration: 'none', fontFamily: 'Cinzel, serif', fontSize: 10,
+          color: '#9A7320', letterSpacing: '0.1em',
+        }}>← READING VIEW</Link>
+        <span style={{ color: '#4A2010', fontSize: 12 }}>✦</span>
+        <span style={{
+          fontFamily: 'Cinzel, serif', fontSize: 13, color: '#C9A848', letterSpacing: '0.04em',
+        }}>
+          {book.name} · {chapterN}
         </span>
-        <span style={{ marginLeft: 'auto', fontSize: 9, color: '#333', letterSpacing: '0.1em' }}>
-          PARALLEL: DOUAY-RHEIMS | LATIN VULGATE
+        <span style={{ marginLeft: 'auto', fontFamily: 'Cinzel, serif', fontSize: 8.5, color: '#6A4828', letterSpacing: '0.1em' }}>
+          PARALLEL EDITION
         </span>
       </header>
 
       {/* Column headers */}
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1fr',
-        borderBottom: '1px solid #1a1a1a', background: '#070707',
+        background: '#3A1E08', borderBottom: '2px solid #9A7320',
       }}>
         <div style={{
-          padding: '10px 20px', borderRight: '1px solid #1a1a1a',
-          fontSize: 9, color: '#C9A84C', letterSpacing: '0.15em',
+          padding: '10px 20px', borderRight: '1px solid #5A3018',
+          fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.18em', color: '#C9A848',
         }}>
-          DOUAY-RHEIMS (Challoner, 1749)
+          ✦ DOUAY-RHEIMS (Challoner, 1749)
         </div>
         <div style={{
           padding: '10px 20px',
-          fontSize: 9, color: '#8B0000', letterSpacing: '0.15em',
+          fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.18em', color: '#E88080',
         }}>
-          VULGATA CLEMENTINA (St. Jerome, 4th c.)
+          ✦ VULGATA CLEMENTINA (St. Jerome, 4th c.)
         </div>
       </div>
 
-      {/* Chapter header */}
-      <div style={{ textAlign: 'center', padding: '24px 20px 16px', borderBottom: '1px solid #0f0f0f' }}>
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: 20, color: '#F0E8D8' }}>
-          {book.name} — Chapter {chapterN}
+      {/* Chapter title */}
+      <div style={{
+        textAlign: 'center', padding: '22px 20px 14px',
+        borderBottom: '1px solid #D4BC8A', background: '#F0E6CC',
+      }}>
+        <div style={{
+          fontFamily: 'Cinzel Decorative, Cinzel, serif',
+          fontSize: 22, fontWeight: 700, color: '#7A0E1C', letterSpacing: '0.04em', marginBottom: 4,
+        }}>
+          {book.name}
         </div>
-        {vulgate && (
-          <div style={{ fontSize: 11, color: '#555', fontFamily: 'Georgia, serif', marginTop: 4, fontStyle: 'italic' }}>
-            {BIBLE_BOOKS.find(b => b.id === bookId)?.name}
-            {' '}·{' '}
-            {getVulgateChapter(bookId, chapterN) ? 'Latin text available' : 'Latin text not yet indexed for this chapter'}
-          </div>
-        )}
-        <div style={{ fontSize: 10, color: '#2a2a2a', marginTop: 8, fontFamily: 'monospace' }}>
-          Click a verse to highlight both columns simultaneously
+        <div style={{
+          fontFamily: 'Cinzel, serif', fontSize: 13, color: '#9A7320', letterSpacing: '0.1em',
+        }}>
+          Chapter {chapterN}
+        </div>
+        <div style={{
+          fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+          fontSize: 13, color: '#8B6040', marginTop: 8,
+        }}>
+          Click a verse to illuminate both columns simultaneously
         </div>
       </div>
 
-      {/* Parallel verses */}
+      {/* Verses */}
       <main style={{ paddingBottom: 80 }}>
-        {chapter.verses.map(v => {
+        {chapter.verses.map((v, idx) => {
           const vv = getVulgateVerse(bookId, chapterN, v.verse)
           const isHl = highlightVerse === v.verse
+          const rowBg = isHl ? 'rgba(184,134,11,0.12)' : idx % 2 === 0 ? '#F7F0DC' : '#F2E8CE'
 
           return (
             <div
@@ -112,44 +120,49 @@ export default function ParallelPage() {
               onClick={() => setHighlightVerse(isHl ? null : v.verse)}
               style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr',
-                background: isHl ? 'rgba(201,168,76,0.07)' : 'transparent',
-                borderBottom: '1px solid #0f0f0f',
+                background: rowBg, borderBottom: '1px solid #E6D5A8',
                 cursor: 'pointer', transition: 'background 0.15s',
               }}
             >
-              {/* DR column */}
+              {/* D-R column */}
               <div style={{
-                padding: '14px 20px', borderRight: '1px solid #111',
-                borderLeft: isHl ? '2px solid #C9A84C' : '2px solid transparent',
+                padding: '14px 20px', borderRight: '1px solid #E6D5A8',
+                borderLeft: isHl ? '3px solid #B8860B' : '3px solid transparent',
               }}>
-                <sup style={{ fontSize: 10, color: isHl ? '#C9A84C' : '#5a4520', fontFamily: 'monospace', marginRight: 6 }}>
-                  {v.verse}
-                </sup>
-                <span style={{ fontFamily: 'Georgia, serif', fontSize: 15, color: '#D8CEB8', lineHeight: 1.8 }}>
-                  {v.text}
-                </span>
+                <sup style={{
+                  fontFamily: 'Cinzel, serif', fontSize: 10,
+                  color: isHl ? '#B8860B' : '#9A7320', marginRight: 6,
+                  verticalAlign: 'super', letterSpacing: '0.04em',
+                }}>{v.verse}</sup>
+                <span style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontSize: 16,
+                  color: '#2A1405', lineHeight: 1.85,
+                }}>{v.text}</span>
               </div>
 
               {/* Vulgate column */}
               <div style={{
                 padding: '14px 20px',
-                borderLeft: isHl ? '2px solid #8B0000' : '2px solid transparent',
+                borderLeft: isHl ? '3px solid #7A0E1C' : '3px solid transparent',
               }}>
                 {vv ? (
                   <>
-                    <sup style={{ fontSize: 10, color: isHl ? '#8B0000' : '#5a2020', fontFamily: 'monospace', marginRight: 6 }}>
-                      {v.verse}
-                    </sup>
+                    <sup style={{
+                      fontFamily: 'Cinzel, serif', fontSize: 10,
+                      color: isHl ? '#7A0E1C' : '#8B4030', marginRight: 6,
+                      verticalAlign: 'super',
+                    }}>{v.verse}</sup>
                     <span style={{
-                      fontFamily: 'Georgia, serif', fontSize: 15, color: '#C8B0B0',
-                      lineHeight: 1.8, fontStyle: 'italic',
-                    }}>
-                      {vv.latin}
-                    </span>
+                      fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                      fontSize: 16, color: '#3A1E0A', lineHeight: 1.85,
+                    }}>{vv.latin}</span>
                   </>
                 ) : (
-                  <span style={{ fontFamily: 'Georgia, serif', fontSize: 13, color: '#2a2a2a', fontStyle: 'italic' }}>
-                    Latin text not yet indexed for this verse.
+                  <span style={{
+                    fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                    fontSize: 14, color: '#B4A080',
+                  }}>
+                    Latin not yet indexed.
                   </span>
                 )}
               </div>
@@ -161,33 +174,32 @@ export default function ParallelPage() {
       {/* Nav footer */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: '#070707', borderTop: '1px solid #1a1a1a',
+        background: '#2A1008', borderTop: '2px solid #9A7320',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '10px 20px',
       }}>
         <button onClick={() => nav(-1)} style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: '1px solid #2a2a2a', borderRadius: 4,
-          color: '#555', fontFamily: 'monospace', fontSize: 10,
-          padding: '8px 14px', cursor: 'pointer',
+          background: 'rgba(255,255,255,0.05)', border: '1px solid #4A2010',
+          borderRadius: 3, color: '#9A7320', fontFamily: 'Cinzel, serif', fontSize: 10,
+          letterSpacing: '0.1em', padding: '8px 14px', cursor: 'pointer',
         }}>
           <ChevronLeft size={12}/> PREV
         </button>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <Link href={`/read/${bookId}/${chapterN}`} style={{
-            fontSize: 10, color: '#555', textDecoration: 'none',
-            fontFamily: 'monospace', letterSpacing: '0.08em',
-          }}>
-            READING VIEW
-          </Link>
-          <span style={{ color: '#1e1e1e' }}>·</span>
+            fontFamily: 'Cinzel, serif', fontSize: 10, color: '#6A4828',
+            textDecoration: 'none', letterSpacing: '0.08em',
+          }}>READING VIEW</Link>
+          <span style={{ color: '#3A1808' }}>✦</span>
           <select
             value={bookId}
             onChange={e => router.push(`/parallel/${e.target.value}/1`)}
             style={{
-              background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 3,
-              color: '#555', fontFamily: 'monospace', fontSize: 10, padding: '4px 8px',
+              background: '#3A1808', border: '1px solid #5A3020',
+              borderRadius: 2, color: '#9A7320',
+              fontFamily: 'Cinzel, serif', fontSize: 10, padding: '4px 8px',
             }}
           >
             {BIBLE_BOOKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -196,9 +208,9 @@ export default function ParallelPage() {
 
         <button onClick={() => nav(1)} style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: '1px solid #2a2a2a', borderRadius: 4,
-          color: '#555', fontFamily: 'monospace', fontSize: 10,
-          padding: '8px 14px', cursor: 'pointer',
+          background: 'rgba(255,255,255,0.05)', border: '1px solid #4A2010',
+          borderRadius: 3, color: '#9A7320', fontFamily: 'Cinzel, serif', fontSize: 10,
+          letterSpacing: '0.1em', padding: '8px 14px', cursor: 'pointer',
         }}>
           NEXT <ChevronRight size={12}/>
         </button>

@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { X, BookOpen, Link2, MessageSquare, Volume2 } from 'lucide-react'
+import { X, BookOpen, Link2, PenLine, Volume2, Trash2 } from 'lucide-react'
 
 type CommentaryTab = 'commentary' | 'ccc' | 'crossrefs' | 'notes'
 
 interface Commentary { id: number; text: string; author: string; source: string; type: string }
 interface CCCRef { ccc_paragraph: string; ccc_summary: string }
 interface CrossRef { to_book: string; to_chapter: number; to_verse: number; relationship: string }
+interface Note { id?: number; note_text: string }
 
 interface Props {
   book: string; chapter: number; verse: number; verseText: string
@@ -15,22 +16,30 @@ interface Props {
 }
 
 const HIGHLIGHT_COLORS = [
-  { id: 'yellow', label: 'Key', bg: 'rgba(255,220,0,0.35)', border: '#FFD700' },
-  { id: 'blue',   label: 'Mary', bg: 'rgba(74,158,255,0.30)', border: '#4a9eff' },
-  { id: 'red',    label: 'Christ', bg: 'rgba(220,50,50,0.30)', border: '#DC3232' },
-  { id: 'green',  label: 'Prayer', bg: 'rgba(50,180,80,0.30)', border: '#32B450' },
+  { id: 'yellow', label: 'Key Text',   bg: 'rgba(184,134,11,0.22)',  border: '#B8860B', swatch: '#E8B840' },
+  { id: 'blue',   label: 'Marian',     bg: 'rgba(26,42,94,0.15)',    border: '#1A2A5E', swatch: '#4A6ABE' },
+  { id: 'red',    label: 'Christ',     bg: 'rgba(122,14,28,0.15)',   border: '#7A0E1C', swatch: '#A02030' },
+  { id: 'green',  label: 'Prayer',     bg: 'rgba(42,74,26,0.15)',    border: '#2A4A1A', swatch: '#4A8030' },
 ]
+
+const REL_LABELS: Record<string, string> = {
+  fulfillment: 'Fulfillment',
+  typology: 'Type / Antitype',
+  parallel: 'Parallel Passage',
+  thematic: 'Thematic Link',
+}
 
 export default function CommentaryDrawer({ book, chapter, verse, verseText, onClose, onNavigate }: Props) {
   const [tab, setTab] = useState<CommentaryTab>('commentary')
   const [commentaries, setCommentaries] = useState<Commentary[]>([])
   const [cccRefs, setCccRefs] = useState<CCCRef[]>([])
   const [crossRefs, setCrossRefs] = useState<CrossRef[]>([])
-  const [notes, setNotes] = useState<string[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState('')
   const [loading, setLoading] = useState(true)
   const [speaking, setSpeaking] = useState(false)
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null)
+  const [savedFlash, setSavedFlash] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -47,7 +56,7 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
     const session = localStorage.getItem('bible_session') || 'default'
     fetch(`/api/note?session_id=${session}&book=${book}&chapter=${chapter}&verse=${verse}`)
       .then(r => r.json())
-      .then(d => setNotes((d.notes || []).map((n: {note_text: string}) => n.note_text)))
+      .then(d => setNotes(d.notes || []))
   }, [book, chapter, verse])
 
   const saveNote = async () => {
@@ -58,15 +67,16 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: session, book, chapter, verse, note_text: newNote.trim() }),
     })
-    setNotes(prev => [...prev, newNote.trim()])
+    setNotes(prev => [...prev, { note_text: newNote.trim() }])
     setNewNote('')
+    setSavedFlash(true)
+    setTimeout(() => setSavedFlash(false), 2000)
   }
 
   const saveHighlight = async (color: string) => {
     const session = localStorage.getItem('bible_session') || 'default'
     await fetch('/api/highlight', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: session, book, chapter, verse, color }),
     })
   }
@@ -87,112 +97,212 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
     audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url) }
   }
 
-  const TABS: { id: CommentaryTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'commentary', label: 'Commentary', icon: <BookOpen size={13}/> },
-    { id: 'ccc',        label: 'Catechism',  icon: <BookOpen size={13}/> },
-    { id: 'crossrefs',  label: 'Cross-Refs', icon: <Link2 size={13}/> },
-    { id: 'notes',      label: 'My Notes',   icon: <MessageSquare size={13}/> },
+  const bookLabel = book.charAt(0).toUpperCase() + book.slice(1)
+
+  const TABS: { id: CommentaryTab; label: string; count?: number }[] = [
+    { id: 'commentary', label: 'Fathers',  count: commentaries.length || undefined },
+    { id: 'ccc',        label: 'Catechism', count: cccRefs.length || undefined },
+    { id: 'crossrefs',  label: 'Links',    count: crossRefs.length || undefined },
+    { id: 'notes',      label: 'My Notes', count: notes.length || undefined },
   ]
 
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      maxHeight: '72vh', display: 'flex', flexDirection: 'column',
-      background: '#0c0c0c', borderTop: '2px solid #8B0000',
-      boxShadow: '0 -8px 40px rgba(0,0,0,0.8)',
+      maxHeight: '76vh', display: 'flex', flexDirection: 'column',
+      background: '#F7F0DC',
+      borderTop: '3px solid #9A7320',
+      boxShadow: '0 -12px 48px rgba(42,16,8,0.35)',
     }}>
-      {/* Header */}
-      <div style={{ padding: '12px 16px 0', flexShrink: 0 }}>
+
+      {/* ── Drawer Header ── */}
+      <div style={{
+        background: '#2A1008',
+        padding: '12px 18px 0',
+        flexShrink: 0,
+      }}>
+        {/* Verse ref + close */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ flex: 1, paddingRight: 12 }}>
-            <div style={{ fontSize: 10, color: '#8B0000', fontFamily: 'monospace', letterSpacing: '0.2em', marginBottom: 4 }}>
-              {book.toUpperCase()} {chapter}:{verse}
+            <div style={{
+              fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em',
+              color: '#9A7320', marginBottom: 6,
+            }}>
+              ✦ {bookLabel.toUpperCase()} {chapter}:{verse}
             </div>
-            <div style={{ fontSize: 14, color: '#E8D8B8', fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.5 }}>
+            <div style={{
+              fontFamily: 'EB Garamond, Georgia, serif', fontSize: 16,
+              fontStyle: 'italic', color: '#E8D8B8', lineHeight: 1.55,
+            }}>
               "{verseText}"
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={speakVerse} style={{
-              background: speaking ? 'rgba(139,0,0,0.25)' : 'none',
-              border: `1px solid ${speaking ? '#8B0000' : '#2a2a2a'}`,
-              color: speaking ? '#FF6666' : '#555', borderRadius: 4,
-              width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}><Volume2 size={14}/></button>
-            <button onClick={onClose} style={{
-              background: 'none', border: '1px solid #2a2a2a', color: '#555',
-              borderRadius: 4, width: 30, height: 30, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}><X size={14}/></button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, paddingTop: 2 }}>
+            <button onClick={speakVerse} title="Read verse aloud" style={{
+              background: speaking ? 'rgba(122,14,28,0.4)' : 'rgba(42,16,8,0.6)',
+              border: `1px solid ${speaking ? '#7A0E1C' : '#4A2010'}`,
+              color: speaking ? '#E88080' : '#9A7320',
+              borderRadius: 3, padding: '5px 8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <Volume2 size={13}/>
+            </button>
+            <button onClick={onClose} title="Close" style={{
+              background: 'rgba(42,16,8,0.6)', border: '1px solid #4A2010',
+              color: '#9A7320', borderRadius: 3, padding: '5px 8px',
+              cursor: 'pointer', display: 'flex', alignItems: 'center',
+            }}>
+              <X size={13}/>
+            </button>
           </div>
         </div>
 
-        {/* Highlight row */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontSize: 9, color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>HIGHLIGHT:</span>
+        {/* Highlight swatches */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <span style={{
+            fontFamily: 'Cinzel, serif', fontSize: 8.5, letterSpacing: '0.18em',
+            color: '#6A4828',
+          }}>MARK:</span>
           {HIGHLIGHT_COLORS.map(c => (
             <button key={c.id} onClick={() => saveHighlight(c.id)} title={c.label} style={{
-              width: 22, height: 22, borderRadius: 3, cursor: 'pointer',
-              background: c.bg, border: `1px solid ${c.border}`,
-              fontSize: 9, color: c.border, fontFamily: 'monospace',
-            }}>{c.id[0].toUpperCase()}</button>
+              display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px',
+              background: 'rgba(42,16,8,0.4)', border: `1px solid ${c.border}55`,
+              borderRadius: 2, cursor: 'pointer',
+            }}>
+              <span style={{
+                display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
+                background: c.swatch, flexShrink: 0,
+              }}/>
+              <span style={{
+                fontFamily: 'Cinzel, serif', fontSize: 8.5, color: c.swatch,
+                letterSpacing: '0.08em',
+              }}>{c.label}</span>
+            </button>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #1e1e1e' }}>
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: 0 }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              padding: '6px 12px', fontFamily: 'monospace', fontSize: 10,
-              letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 4,
-              color: tab === t.id ? '#C9A84C' : '#444',
-              borderBottom: tab === t.id ? '2px solid #C9A84C' : '2px solid transparent',
-              marginBottom: -1,
+              background: tab === t.id ? '#F7F0DC' : 'transparent',
+              border: 'none',
+              borderTop: tab === t.id ? '2px solid #9A7320' : '2px solid transparent',
+              borderLeft: tab === t.id ? '1px solid #9A732040' : '1px solid transparent',
+              borderRight: tab === t.id ? '1px solid #9A732040' : '1px solid transparent',
+              padding: '7px 14px',
+              fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.1em',
+              cursor: 'pointer',
+              color: tab === t.id ? '#7A0E1C' : '#8A6040',
+              borderRadius: '4px 4px 0 0',
+              marginBottom: tab === t.id ? '-1px' : 0,
+              transition: 'color 0.15s',
             }}>
-              {t.icon}{t.label.toUpperCase()}
+              {t.label.toUpperCase()}
+              {t.count ? (
+                <span style={{
+                  marginLeft: 6, fontFamily: 'EB Garamond, serif', fontSize: 11,
+                  color: tab === t.id ? '#9A7320' : '#5A3A20',
+                }}>({t.count})</span>
+              ) : null}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-        {loading && <div style={{ color: '#333', fontFamily: 'monospace', fontSize: 11 }}>Loading...</div>}
+      {/* ── Drawer Body ── */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '20px 20px 28px',
+        background: '#F7F0DC',
+      }}>
+        {loading && (
+          <div style={{
+            fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+            color: '#8B6040', fontSize: 15, textAlign: 'center', padding: '24px 0',
+          }}>
+            ✦ Loading commentary…
+          </div>
+        )}
 
-        {/* Commentary Tab */}
+        {/* ── COMMENTARY / CHURCH FATHERS ── */}
         {!loading && tab === 'commentary' && (
           <div>
             {commentaries.length === 0 ? (
-              <div style={{ color: '#444', fontFamily: 'monospace', fontSize: 11, fontStyle: 'italic' }}>
-                No commentary yet for this verse. Commentary is being written for all passages.
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: 11, color: '#9A7320', letterSpacing: '0.1em', marginBottom: 12 }}>
+                  ✦ ✦ ✦
+                </div>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 16, color: '#8B6040', lineHeight: 1.7,
+                }}>
+                  No commentary yet for this verse.
+                  Commentary is being written and added for all passages.
+                </div>
               </div>
             ) : commentaries.map((c, i) => (
-              <div key={i} style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 13, color: '#D4C4A0', fontFamily: 'Georgia, serif', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+              <div key={i} style={{
+                marginBottom: 24, paddingBottom: 24,
+                borderBottom: i < commentaries.length - 1 ? '1px solid #D4BC8A' : 'none',
+              }}>
+                {/* Author badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{
+                    fontFamily: 'Cinzel, serif', fontSize: 8.5, letterSpacing: '0.15em',
+                    background: '#2A1008', color: '#C9A848',
+                    padding: '3px 10px', borderRadius: 2,
+                  }}>
+                    {c.type === 'theological' ? 'THEOLOGY' : c.type === 'verse' ? 'VERSE COMMENT' : 'STUDY NOTE'}
+                  </span>
+                </div>
+                {/* Commentary text */}
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontSize: 16.5,
+                  color: '#2A1405', lineHeight: 1.85, whiteSpace: 'pre-line',
+                  marginBottom: 10,
+                }}>
                   {c.text}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 10, color: '#555', fontFamily: 'monospace' }}>
-                  — {c.author} · {c.source}
+                {/* Attribution */}
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 13, color: '#9A7320',
+                }}>
+                  — {c.author}{c.source && c.source !== 'Study Notes' ? `, ${c.source}` : ''}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* CCC Tab */}
+        {/* ── CATECHISM ── */}
         {!loading && tab === 'ccc' && (
           <div>
             {cccRefs.length === 0 ? (
-              <div style={{ color: '#444', fontFamily: 'monospace', fontSize: 11, fontStyle: 'italic' }}>
-                No Catechism cross-references indexed for this verse yet.
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 16, color: '#8B6040', lineHeight: 1.7,
+                }}>
+                  No Catechism cross-references indexed for this verse yet.
+                </div>
               </div>
             ) : cccRefs.map((r, i) => (
-              <div key={i} style={{ marginBottom: 16, padding: '12px 14px', background: '#0d0d0d', border: '1px solid #1e1e1e', borderLeft: '3px solid #8B0000', borderRadius: 4 }}>
-                <div style={{ fontSize: 10, color: '#8B0000', fontFamily: 'monospace', marginBottom: 6, letterSpacing: '0.1em' }}>
-                  CCC §{r.ccc_paragraph}
+              <div key={i} style={{
+                marginBottom: 16, padding: '16px 18px',
+                background: '#EFE3C2', border: '1px solid #D4BC8A',
+                borderLeft: '4px solid #7A0E1C', borderRadius: 3,
+              }}>
+                <div style={{
+                  fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.15em',
+                  color: '#7A0E1C', marginBottom: 8,
+                }}>
+                  CATECHISM OF THE CATHOLIC CHURCH §{r.ccc_paragraph}
                 </div>
-                <div style={{ fontSize: 13, color: '#C8C0B0', fontFamily: 'Georgia, serif', lineHeight: 1.65, fontStyle: 'italic' }}>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontSize: 16,
+                  fontStyle: 'italic', color: '#2A1405', lineHeight: 1.75,
+                }}>
                   "{r.ccc_summary}"
                 </div>
               </div>
@@ -200,60 +310,147 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
           </div>
         )}
 
-        {/* Cross-Refs Tab */}
+        {/* ── CROSS-REFERENCES ── */}
         {!loading && tab === 'crossrefs' && (
           <div>
             {crossRefs.length === 0 ? (
-              <div style={{ color: '#444', fontFamily: 'monospace', fontSize: 11, fontStyle: 'italic' }}>
-                No cross-references indexed for this verse yet.
-              </div>
-            ) : crossRefs.map((r, i) => (
-              <button key={i} onClick={() => onNavigate(r.to_book, r.to_chapter)} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                width: '100%', padding: '10px 14px', marginBottom: 8,
-                background: '#0d0d0d', border: '1px solid #1e1e1e', borderRadius: 4,
-                cursor: 'pointer', textAlign: 'left',
-              }}>
-                <div>
-                  <span style={{ fontSize: 13, color: '#C9A84C', fontFamily: 'monospace' }}>
-                    {r.to_book.charAt(0).toUpperCase() + r.to_book.slice(1)} {r.to_chapter}:{r.to_verse}
-                  </span>
-                  <span style={{ marginLeft: 10, fontSize: 10, color: '#555', fontFamily: 'monospace', textTransform: 'uppercase' }}>
-                    {r.relationship}
-                  </span>
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 16, color: '#8B6040', lineHeight: 1.7,
+                }}>
+                  No cross-references indexed for this verse yet.
                 </div>
-                <Link2 size={12} style={{ color: '#444' }}/>
-              </button>
-            ))}
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 14, color: '#8B6040', marginBottom: 16, textAlign: 'center',
+                }}>
+                  Tap a reference to navigate to that passage
+                </div>
+                {crossRefs.map((r, i) => {
+                  const refLabel = r.to_book.charAt(0).toUpperCase() + r.to_book.slice(1)
+                  return (
+                    <button key={i} onClick={() => onNavigate(r.to_book, r.to_chapter)} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      width: '100%', padding: '12px 16px', marginBottom: 8,
+                      background: '#EFE3C2', border: '1px solid #D4BC8A',
+                      borderRadius: 3, cursor: 'pointer', textAlign: 'left',
+                      transition: 'background 0.15s',
+                    }}>
+                      <div>
+                        <span style={{
+                          fontFamily: 'Cinzel, serif', fontSize: 13,
+                          color: '#7A0E1C', letterSpacing: '0.04em',
+                        }}>
+                          {refLabel} {r.to_chapter}:{r.to_verse}
+                        </span>
+                        <span style={{
+                          marginLeft: 12,
+                          fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                          fontSize: 13, color: '#8B6040',
+                        }}>
+                          {REL_LABELS[r.relationship] || r.relationship}
+                        </span>
+                      </div>
+                      <Link2 size={14} style={{ color: '#9A7320', flexShrink: 0 }}/>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Notes Tab */}
+        {/* ── MY NOTES ── */}
         {!loading && tab === 'notes' && (
           <div>
-            <div style={{ marginBottom: 12 }}>
+            {/* Write new note */}
+            <div style={{
+              background: '#FAF4E6', border: '1px solid #D4BC8A',
+              borderRadius: 4, padding: '18px 18px 14px',
+              marginBottom: 24,
+            }}>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.18em',
+                color: '#7A0E1C', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <PenLine size={13}/> WRITE A REFLECTION
+              </div>
               <textarea
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
-                placeholder="Write your personal note on this verse..."
+                placeholder="Write your reflection on this verse…"
+                rows={5}
                 style={{
-                  width: '100%', minHeight: 80, background: '#0a0a0a',
-                  border: '1px solid #2a2a2a', borderRadius: 4, color: '#D4C4A0',
-                  fontFamily: 'Georgia, serif', fontSize: 13, padding: 10, resize: 'vertical',
+                  width: '100%',
+                  minHeight: 160,
+                  background: '#FFFDF6',
+                  border: '1px solid #D4BC8A',
+                  borderRadius: 3, color: '#2A1405',
+                  fontFamily: 'EB Garamond, Georgia, serif',
+                  fontSize: 16, lineHeight: 1.75,
+                  padding: '12px 14px', resize: 'vertical',
                   outline: 'none', boxSizing: 'border-box',
+                  boxShadow: 'inset 0 2px 4px rgba(42,16,8,0.05)',
                 }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#9A7320'; e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(42,16,8,0.05), 0 0 0 2px rgba(154,115,32,0.15)' }}
+                onBlur={e => { e.currentTarget.style.borderColor = '#D4BC8A'; e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(42,16,8,0.05)' }}
               />
-              <button onClick={saveNote} style={{
-                marginTop: 6, padding: '6px 16px', background: '#8B0000',
-                border: 'none', borderRadius: 4, color: '#fff',
-                fontFamily: 'monospace', fontSize: 11, cursor: 'pointer',
-              }}>SAVE NOTE</button>
-            </div>
-            {notes.map((n, i) => (
-              <div key={i} style={{ padding: '10px 14px', marginBottom: 8, background: '#0d0d0d', border: '1px solid #1e1e1e', borderRadius: 4 }}>
-                <div style={{ fontSize: 13, color: '#C8C0B0', fontFamily: 'Georgia, serif', lineHeight: 1.6 }}>{n}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
+                <button onClick={saveNote} style={{
+                  flex: 1, padding: '11px 0',
+                  background: '#2A1008', border: '1px solid #9A7320',
+                  borderRadius: 3, color: '#C9A848',
+                  fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.1em',
+                  cursor: 'pointer', transition: 'background 0.2s',
+                }}>
+                  SAVE REFLECTION
+                </button>
+                {savedFlash && (
+                  <span style={{
+                    fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                    fontSize: 14, color: '#2A4A1A',
+                  }}>✓ Saved</span>
+                )}
               </div>
-            ))}
+            </div>
+
+            {/* Saved notes */}
+            {notes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{
+                  fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                  fontSize: 16, color: '#8B6040', lineHeight: 1.7,
+                }}>
+                  ✍ Your reflections on this verse will appear here.
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em',
+                  color: '#9A7320', marginBottom: 12,
+                }}>YOUR REFLECTIONS</div>
+                {notes.map((n, i) => (
+                  <div key={i} style={{
+                    background: '#EFE3C2', border: '1px solid #D4BC8A',
+                    borderLeft: '3px solid #9A7320',
+                    borderRadius: 3, padding: '14px 16px',
+                    marginBottom: 10,
+                  }}>
+                    <div style={{
+                      fontFamily: 'EB Garamond, Georgia, serif', fontSize: 16,
+                      color: '#2A1405', lineHeight: 1.75,
+                    }}>
+                      {n.note_text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

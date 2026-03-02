@@ -6,103 +6,146 @@ export const metadata = { title: 'Thematic Study Paths | Douay-Rheims Catholic B
 
 export default function StudyPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405' }}>
+
       {/* Header */}
       <header style={{
-        borderBottom: '1px solid #1a1a1a', padding: '14px 24px',
-        display: 'flex', alignItems: 'center', gap: 16,
-        position: 'sticky', top: 0, background: '#050505', zIndex: 50,
+        background: '#2A1008', borderBottom: '2px solid #9A7320',
+        padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 16,
+        position: 'sticky', top: 0, zIndex: 50,
       }}>
-        <Link href="/" style={{ textDecoration: 'none', fontSize: 10, color: '#8B0000', letterSpacing: '0.2em' }}>
-          ← D-R BIBLE
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, color: '#9A7320' }}>☧</span>
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#9A7320', letterSpacing: '0.15em' }}>
+            D-R BIBLE
+          </span>
         </Link>
-        <span style={{ color: '#1e1e1e' }}>·</span>
-        <span style={{ fontSize: 10, color: '#555', letterSpacing: '0.1em' }}>THEMATIC STUDY PATHS</span>
+        <span style={{ color: '#4A2010', fontSize: 12 }}>✦</span>
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#C9A848', letterSpacing: '0.1em' }}>
+          THEMATIC STUDY PATHS
+        </span>
       </header>
 
-      <main style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px 80px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ fontSize: 9, color: '#8B0000', letterSpacing: '0.3em', marginBottom: 12 }}>
-            ✟ GUIDED STUDY
-          </div>
+      <main style={{ maxWidth: 960, margin: '0 auto', padding: '48px 24px 80px' }}>
+
+        {/* Hero */}
+        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+          <div style={{
+            fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.35em',
+            color: '#9A7320', marginBottom: 14,
+          }}>✦ &nbsp; GUIDED STUDY &nbsp; ✦</div>
           <h1 style={{
-            fontFamily: 'Georgia, serif', fontSize: 32, color: '#F0E8D8',
-            marginBottom: 12, fontWeight: 700,
+            fontFamily: 'Cinzel Decorative, Cinzel, serif',
+            fontSize: 30, fontWeight: 700, color: '#2A1405',
+            letterSpacing: '0.04em', marginBottom: 16,
           }}>Thematic Study Paths</h1>
-          <p style={{
-            fontFamily: 'Georgia, serif', fontSize: 14, color: '#555',
-            maxWidth: 520, margin: '0 auto', lineHeight: 1.7,
+          <div style={{
+            fontFamily: 'EB Garamond, Georgia, serif',
+            fontStyle: 'italic', fontSize: 18, color: '#5C3A1E',
+            maxWidth: 560, margin: '0 auto', lineHeight: 1.7,
           }}>
-            Curated collections of Scripture passages organized by theological theme.
-            Each path guides you through the Biblical foundations of a central Catholic truth.
-          </p>
+            Six curated collections of Scripture passages — each illuminating
+            a central doctrine of the Catholic Faith through the sacred text itself.
+          </div>
+          <div style={{
+            fontFamily: 'EB Garamond, serif', fontSize: 18,
+            color: '#9A7320', letterSpacing: '0.2em', marginTop: 22, opacity: 0.6,
+          }}>─── ✦ ───</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 16 }}>
+        {/* Path cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20 }}>
           {STUDY_PATHS.map(path => (
             <div key={path.id} style={{
-              background: '#0a0a0a', border: '1px solid #161616',
-              borderLeft: `3px solid ${path.color}`, borderRadius: 6,
-              padding: '20px 20px 16px',
+              background: '#EFE3C2', border: '1px solid #D4BC8A',
+              borderLeft: `4px solid ${path.color}`,
+              borderRadius: 4,
             }}>
-              {/* Path header */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                <span style={{ fontSize: 24, flexShrink: 0 }}>{path.icon}</span>
-                <div>
-                  <h2 style={{
-                    fontFamily: 'Georgia, serif', fontSize: 17, color: '#F0E8D8',
-                    marginBottom: 6, fontWeight: 700,
-                  }}>{path.title}</h2>
-                  <p style={{
-                    fontFamily: 'Georgia, serif', fontSize: 12, color: '#555',
-                    lineHeight: 1.6,
-                  }}>{path.description}</p>
+              {/* Card header */}
+              <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #D4BC8A' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <span style={{ fontSize: 26, flexShrink: 0 }}>{path.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <h2 style={{
+                      fontFamily: 'Cinzel, serif', fontSize: 15, fontWeight: 600,
+                      color: '#2A1405', letterSpacing: '0.04em', marginBottom: 6,
+                    }}>{path.title}</h2>
+                    <p style={{
+                      fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                      fontSize: 15, color: '#5C3A1E', lineHeight: 1.6,
+                    }}>{path.description.slice(0, 120)}…</p>
+                  </div>
                 </div>
               </div>
 
               {/* Verse list */}
-              <div style={{ borderTop: '1px solid #161616', paddingTop: 12, marginBottom: 14 }}>
-                {path.verses.map((v, i) => {
-                  const book = getBook(v.book)
+              <div style={{ padding: '10px 16px' }}>
+                {path.verses.slice(0, 5).map((v, i) => {
+                  const b = getBook(v.book)
                   return (
                     <div key={i} style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 10,
-                      padding: '8px 0', borderBottom: '1px solid #0f0f0f',
+                      display: 'flex', alignItems: 'baseline', gap: 10,
+                      padding: '6px 0',
+                      borderBottom: i < Math.min(path.verses.length, 5) - 1 ? '1px solid #E6D5A8' : 'none',
                     }}>
                       <Link href={`/read/${v.book}/${v.chapter}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
                         <span style={{
-                          display: 'inline-block', minWidth: 100,
-                          fontSize: 10, color: path.color,
-                          fontFamily: 'monospace', letterSpacing: '0.05em',
+                          fontFamily: 'Cinzel, serif', fontSize: 10,
+                          color: path.color as string, letterSpacing: '0.05em',
+                          minWidth: 100, display: 'inline-block',
                         }}>
-                          {book?.abbreviation || v.book} {v.chapter}:{v.verse}
+                          {b?.abbreviation || v.book} {v.chapter}:{v.verse}
                         </span>
                       </Link>
                       <span style={{
-                        fontSize: 11, color: '#444', fontFamily: 'Georgia, serif',
-                        lineHeight: 1.5, fontStyle: 'italic',
+                        fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                        fontSize: 13, color: '#6B4423', lineHeight: 1.4,
                       }}>
-                        {v.note.slice(0, 90)}{v.note.length > 90 ? '…' : ''}
+                        {v.note.slice(0, 75)}{v.note.length > 75 ? '…' : ''}
                       </span>
                     </div>
                   )
                 })}
+                {path.verses.length > 5 && (
+                  <div style={{
+                    fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                    fontSize: 13, color: '#8B6040', paddingTop: 6, paddingLeft: 2,
+                  }}>
+                    + {path.verses.length - 5} more passages…
+                  </div>
+                )}
               </div>
 
-              {/* Begin path button */}
-              <Link href={`/study/${path.id}`} style={{
-                display: 'inline-block', padding: '8px 18px',
-                background: `${path.color}18`,
-                border: `1px solid ${path.color}44`, borderRadius: 4,
-                color: path.color, textDecoration: 'none',
-                fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.1em',
-              }}>
-                BEGIN PATH →
-              </Link>
+              {/* CTA */}
+              <div style={{ padding: '12px 16px 16px' }}>
+                <Link href={`/study/${path.id}`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '9px 20px',
+                  background: '#2A1008',
+                  border: `1px solid ${path.color as string}`,
+                  borderRadius: 3, textDecoration: 'none',
+                  fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.12em',
+                  color: path.color as string,
+                  transition: 'background 0.2s',
+                }}>
+                  BEGIN PATH ✦
+                </Link>
+              </div>
             </div>
           ))}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer style={{
+        background: '#2A1008', borderTop: '2px solid #9A7320',
+        padding: '20px', textAlign: 'center',
+      }}>
+        <div style={{ fontFamily: 'Cinzel Decorative, Cinzel, serif', fontSize: 18, color: '#9A7320', marginBottom: 6 }}>α · ✦ · Ω</div>
+        <div style={{ fontFamily: 'EB Garamond, serif', fontStyle: 'italic', fontSize: 14, color: '#6A4828' }}>
+          "Thy word is a lamp to my feet, and a light to my paths." — Psalm 118:105
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,195 +1,276 @@
 import Link from 'next/link'
 import { BIBLE_BOOKS } from '@/data/bible-data'
 
-const FEATURED_VERSES = [
-  { ref: 'John 1:1', text: 'In the beginning was the Word, and the Word was with God, and the Word was God.', book: 'john', chapter: 1 },
-  { ref: 'Genesis 1:1', text: 'In the beginning God created heaven, and earth.', book: 'genesis', chapter: 1 },
-  { ref: 'John 3:16', text: 'For God so loved the world, as to give his only begotten Son; that whosoever believeth in him, may not perish, but may have life everlasting.', book: 'john', chapter: 3 },
-  { ref: 'Psalm 22:1', text: 'The Lord ruleth me: and I shall want nothing.', book: 'psalms', chapter: 22 },
-  { ref: 'Matthew 5:3', text: 'Blessed are the poor in spirit: for theirs is the kingdom of heaven.', book: 'matthew', chapter: 5 },
-  { ref: 'Romans 8:28', text: 'We know that to them that love God, all things work together unto good, to such as, according to his purpose, are called to be saints.', book: 'romans', chapter: 8 },
-]
+export const metadata = { title: 'Douay-Rheims Catholic Bible — With Commentary' }
 
-const day = new Date().getDay()
-const featured = FEATURED_VERSES[day % FEATURED_VERSES.length]
+const OT_BOOKS = BIBLE_BOOKS.filter(b => b.testament === 'old')
+const NT_BOOKS = BIBLE_BOOKS.filter(b => b.testament === 'new')
 
-const OT = BIBLE_BOOKS.filter(b => b.testament === 'old')
-const NT = BIBLE_BOOKS.filter(b => b.testament === 'new')
-
-const TESTAMENT_COLORS: Record<string, string> = {
-  old: 'rgba(201,168,76,0.12)',
-  new: 'rgba(139,0,0,0.12)',
-}
-
-export default function HomePage() {
+export default function Home() {
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405' }}>
 
-      {/* Header */}
+      {/* ── Header / Nav ── */}
       <header style={{
-        borderBottom: '1px solid #1a1a1a', padding: '18px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, background: '#050505', zIndex: 50,
+        background: '#2A1008',
+        borderBottom: '2px solid #9A7320',
+        padding: '0 28px',
+        position: 'sticky', top: 0, zIndex: 100,
       }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#8B0000', letterSpacing: '0.25em', fontWeight: 700 }}>
-            ✟ DOUAY-RHEIMS CATHOLIC BIBLE
+        <div style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          height: 56,
+        }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 22, color: '#9A7320', letterSpacing: '0.05em' }}>☧</span>
+            <div>
+              <div style={{
+                fontFamily: 'Cinzel Decorative, Cinzel, serif',
+                fontSize: 13, fontWeight: 700,
+                color: '#C9A848', letterSpacing: '0.08em',
+                lineHeight: 1.2,
+              }}>Douay-Rheims</div>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 8.5,
+                color: '#9A7320', letterSpacing: '0.18em',
+              }}>SACRED SCRIPTURE</div>
+            </div>
           </div>
-          <div style={{ fontSize: 9, color: '#333', letterSpacing: '0.15em', marginTop: 2 }}>
-            CHALLONER REVISION · WITH COMMENTARY
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          <Link href="/study" style={{ fontSize: 10, color: '#C9A84C', textDecoration: 'none', letterSpacing: '0.1em' }}>
-            STUDY PATHS
-          </Link>
-          <Link href="/highlights" style={{ fontSize: 10, color: '#B8860B', textDecoration: 'none', letterSpacing: '0.1em' }}>
-            HIGHLIGHTS
-          </Link>
-          <Link href="/parallel/john/1" style={{ fontSize: 10, color: '#555', textDecoration: 'none', letterSpacing: '0.1em' }}>
-            PARALLEL
-          </Link>
-          <Link href="/read/matthew/5" style={{ fontSize: 10, color: '#555', textDecoration: 'none', letterSpacing: '0.1em' }}>
-            READ
-          </Link>
-          <Link href="/admin/commentary" style={{ fontSize: 10, color: '#333', textDecoration: 'none', letterSpacing: '0.1em' }}>
-            ADMIN
-          </Link>
+
+          {/* Nav */}
+          <nav style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {[
+              { href: '/study',        label: 'Study Paths', gold: true },
+              { href: '/highlights',   label: 'Highlights' },
+              { href: '/parallel/john/1', label: 'Parallel' },
+              { href: '/read/matthew/5',  label: 'Read' },
+              { href: '/admin/commentary', label: 'Admin' },
+            ].map((item, i, arr) => (
+              <span key={item.href} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {i > 0 && <span style={{ color: '#4A2010', fontSize: 10 }}>✦</span>}
+                <Link href={item.href} style={{
+                  fontFamily: 'Cinzel, serif', fontSize: 11,
+                  letterSpacing: '0.12em',
+                  color: item.gold ? '#C9A848' : '#9A7888',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s',
+                }}>
+                  {item.label.toUpperCase()}
+                </Link>
+              </span>
+            ))}
+          </nav>
         </div>
       </header>
 
-      {/* Hero */}
-      <section style={{
-        padding: '60px 24px 48px', textAlign: 'center',
-        borderBottom: '1px solid #1a1a1a',
-        background: 'linear-gradient(180deg, rgba(139,0,0,0.06) 0%, transparent 100%)',
+      {/* ── Hero ── */}
+      <div style={{
+        background: 'linear-gradient(180deg, #2A1008 0%, #3E1A0A 60%, #F7F0DC 100%)',
+        padding: '52px 28px 60px',
+        textAlign: 'center',
       }}>
-        <div style={{ fontSize: 9, color: '#8B0000', letterSpacing: '0.35em', marginBottom: 16 }}>
-          ✟ THE WORD OF GOD ✟
-        </div>
-        <h1 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 900,
-          color: '#F0E8D8', fontFamily: 'Georgia, serif',
-          letterSpacing: '0.05em', marginBottom: 12, lineHeight: 1.1,
-        }}>
-          Douay-Rheims<br/>
-          <span style={{ color: '#C9A84C' }}>Catholic Bible</span>
-        </h1>
-        <p style={{ fontSize: 13, color: '#555', maxWidth: 520, margin: '0 auto 28px', lineHeight: 1.6, fontFamily: 'Georgia, serif' }}>
-          The classic English Catholic translation with scholarly commentary,
-          Catechism cross-references, Church Fathers, and personal study tools.
-        </p>
-
-        {/* Featured verse */}
         <div style={{
-          maxWidth: 600, margin: '0 auto', padding: '20px 24px',
-          background: '#0a0a0a', border: '1px solid #1e1e1e',
-          borderLeft: '3px solid #8B0000', borderRadius: 6, textAlign: 'left',
+          fontFamily: 'Cinzel, serif', fontSize: 11,
+          color: '#9A7320', letterSpacing: '0.35em', marginBottom: 16,
         }}>
-          <div style={{ fontSize: 9, color: '#8B0000', letterSpacing: '0.2em', marginBottom: 10 }}>
-            VERSE OF THE DAY
-          </div>
-          <blockquote style={{
-            fontFamily: 'Georgia, serif', fontSize: 16, color: '#D4C4A0',
-            lineHeight: 1.65, fontStyle: 'italic', margin: '0 0 10px',
+          ✦ &nbsp; SACRA SCRIPTURA &nbsp; ✦
+        </div>
+
+        <h1 style={{
+          fontFamily: 'Cinzel Decorative, Cinzel, serif',
+          fontSize: 38, fontWeight: 700,
+          color: '#F0DCA0', lineHeight: 1.25,
+          marginBottom: 12, letterSpacing: '0.04em',
+        }}>
+          The Holy Bible
+        </h1>
+
+        <div style={{
+          fontFamily: 'EB Garamond, Georgia, serif',
+          fontSize: 18, fontStyle: 'italic',
+          color: '#C9A060', marginBottom: 24,
+          letterSpacing: '0.02em',
+        }}>
+          Douay-Rheims Version · Challoner Revision, 1749
+        </div>
+
+        {/* Ornamental rule */}
+        <div style={{
+          fontFamily: 'EB Garamond, serif', fontSize: 18,
+          color: '#9A7320', letterSpacing: '0.2em', marginBottom: 28,
+        }}>
+          ─────── ✦ ───────
+        </div>
+
+        {/* Subtitle */}
+        <div style={{
+          fontFamily: 'Cinzel, serif', fontSize: 10,
+          color: '#8A6840', letterSpacing: '0.2em',
+          marginBottom: 32,
+        }}>
+          WITH COMMENTARY OF THE CHURCH FATHERS · CATECHISM REFERENCES · α Ω
+        </div>
+
+        {/* CTA buttons */}
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/read/genesis/1" style={{
+            fontFamily: 'Cinzel, serif', fontSize: 12, letterSpacing: '0.12em',
+            background: '#9A7320', color: '#F7F0DC',
+            padding: '12px 28px', borderRadius: 2,
+            border: '1px solid #C9A848', textDecoration: 'none',
           }}>
-            "{featured.text}"
-          </blockquote>
-          <Link href={`/read/${featured.book}/${featured.chapter}`} style={{
-            fontSize: 11, color: '#C9A84C', textDecoration: 'none', fontFamily: 'monospace', letterSpacing: '0.1em',
+            BEGIN READING
+          </Link>
+          <Link href="/study" style={{
+            fontFamily: 'Cinzel, serif', fontSize: 12, letterSpacing: '0.12em',
+            background: 'transparent', color: '#C9A848',
+            padding: '12px 28px', borderRadius: 2,
+            border: '1px solid #9A7320', textDecoration: 'none',
           }}>
-            — {featured.ref} →
+            STUDY PATHS
           </Link>
         </div>
+      </div>
 
-        {/* Quick start buttons */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 28px 80px' }}>
+
+        {/* Feature grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 56 }}>
           {[
-            { label: 'Read John 1', href: '/read/john/1' },
-            { label: 'Sermon on the Mount', href: '/read/matthew/5' },
-            { label: 'Psalm 22 (23)', href: '/read/psalms/22' },
-            { label: 'Isaiah 53', href: '/read/isaiah/53' },
-          ].map(btn => (
-            <Link key={btn.label} href={btn.href} style={{
-              padding: '8px 18px', background: 'rgba(139,0,0,0.12)',
-              border: '1px solid rgba(139,0,0,0.3)', borderRadius: 4,
-              color: '#C9A84C', textDecoration: 'none',
-              fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.08em',
-            }}>{btn.label}</Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Books Grid */}
-      <section style={{ padding: '40px 24px', maxWidth: 1100, margin: '0 auto' }}>
-
-        {/* Feature cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 40 }}>
-          {[
-            { icon: '📖', title: 'Clickable Verses', desc: 'Tap any verse for deep commentary and cross-references' },
-            { icon: '✝️', title: 'Church Fathers', desc: 'Augustine, Aquinas, Chrysostom commenting on Scripture' },
-            { icon: '📚', title: 'CCC Linked', desc: 'Catechism cross-references on key doctrinal passages' },
-            { icon: '🎧', title: 'Audio Reading', desc: 'Listen to chapters read aloud in a meditative voice' },
-            { icon: '🖊️', title: 'Personal Notes', desc: 'Highlight verses and write your own study notes' },
-            { icon: '🔗', title: 'Cross-References', desc: 'Prophecy fulfillments and thematic verse networks' },
+            { icon: '📖', sym: '☩', title: 'Guided Study Paths', desc: 'Six curated theological themes — Mary, Eucharist, Papacy, Apologetics, Prayer, Salvation History. Verse-by-verse with Church Fathers notes.', href: '/study' },
+            { icon: '🔤', sym: 'α Ω', title: 'Parallel Columns', desc: 'Read the Douay-Rheims alongside the Latin Vulgate of St. Jerome — the Bible of the Councils and the Mass.', href: '/parallel/john/1' },
+            { icon: '✦', sym: '✦', title: 'Your Highlights', desc: 'Colour-mark verses that speak to you. Review, organise, and return to your saved passages.', href: '/highlights' },
+            { icon: '✍', sym: '✍', title: 'Commentary & Notes', desc: 'Church Fathers, Catechism references, and cross-references open beside every verse. Write your own reflections.', href: '/read/john/1' },
           ].map(f => (
-            <div key={f.title} style={{
-              padding: '14px 16px', background: '#0a0a0a',
-              border: '1px solid #161616', borderRadius: 6,
-            }}>
-              <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
-              <div style={{ fontSize: 11, color: '#C9A84C', fontFamily: 'monospace', marginBottom: 4 }}>{f.title}</div>
-              <div style={{ fontSize: 11, color: '#444', fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{f.desc}</div>
-            </div>
+            <Link key={f.href} href={f.href} style={{ textDecoration: 'none' }}>
+              <div style={{
+                background: '#EFE3C2', border: '1px solid #D4BC8A',
+                borderTop: '3px solid #9A7320',
+                borderRadius: 4, padding: '22px 20px 20px',
+                transition: 'box-shadow 0.2s, transform 0.2s',
+                cursor: 'pointer',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <span style={{ fontSize: 22 }}>{f.icon}</span>
+                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: 13, color: '#9A7320', opacity: 0.6 }}>{f.sym}</span>
+                </div>
+                <div style={{
+                  fontFamily: 'Cinzel, serif', fontSize: 13, fontWeight: 600,
+                  color: '#2A1405', marginBottom: 8, letterSpacing: '0.04em',
+                }}>{f.title}</div>
+                <div style={{
+                  fontFamily: 'EB Garamond, serif', fontSize: 15, color: '#5C3A1E', lineHeight: 1.6,
+                }}>{f.desc}</div>
+              </div>
+            </Link>
           ))}
         </div>
 
-        {/* OT Books */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 10, color: '#8B0000', letterSpacing: '0.2em', marginBottom: 14, paddingBottom: 8, borderBottom: '1px solid #1a1a1a' }}>
-            OLD TESTAMENT
+        {/* Divider */}
+        <div style={{
+          textAlign: 'center', marginBottom: 40,
+          fontFamily: 'EB Garamond, serif', fontSize: 20, color: '#9A7320',
+          letterSpacing: '0.2em', opacity: 0.7,
+        }}>
+          ─────── ✦ ───────
+        </div>
+
+        {/* Old Testament */}
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{
+              fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.3em',
+              color: '#9A7320', marginBottom: 6,
+            }}>✦ THE OLD LAW ✦</div>
+            <h2 style={{
+              fontFamily: 'Cinzel, serif', fontSize: 20, fontWeight: 600,
+              color: '#2A1405', letterSpacing: '0.06em',
+            }}>Old Testament</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-            {OT.map(book => (
-              <Link key={book.id} href={`/read/${book.id}/1`} style={{
-                padding: '12px 14px', background: TESTAMENT_COLORS.old,
-                border: '1px solid rgba(201,168,76,0.15)', borderRadius: 5,
-                textDecoration: 'none', display: 'block',
-              }}>
-                <div style={{ fontSize: 12, color: '#C9A84C', fontFamily: 'Georgia, serif', marginBottom: 3 }}>{book.name}</div>
-                <div style={{ fontSize: 9, color: '#444', fontFamily: 'monospace' }}>
-                  {book.chapters.length} ch · {book.abbreviation}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+            {OT_BOOKS.map(book => (
+              <Link key={book.id} href={`/read/${book.id}/1`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: '#F0E6CC', border: '1px solid #D4BC8A',
+                  borderRadius: 3, padding: '10px 12px',
+                  transition: 'background 0.15s, border-color 0.15s',
+                }}>
+                  <div style={{
+                    fontFamily: 'Cinzel, serif', fontSize: 12, fontWeight: 500,
+                    color: '#2A1405', letterSpacing: '0.03em', marginBottom: 2,
+                  }}>{book.name}</div>
+                  <div style={{
+                    fontFamily: 'EB Garamond, serif', fontSize: 12, color: '#9A7320',
+                  }}>
+                    {book.chapters.length} ch.
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* NT Books */}
-        <div>
-          <div style={{ fontSize: 10, color: '#8B0000', letterSpacing: '0.2em', marginBottom: 14, paddingBottom: 8, borderBottom: '1px solid #1a1a1a' }}>
-            NEW TESTAMENT
+        {/* New Testament */}
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{
+              fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.3em',
+              color: '#7A0E1C', marginBottom: 6,
+            }}>✦ THE NEW COVENANT ✦</div>
+            <h2 style={{
+              fontFamily: 'Cinzel, serif', fontSize: 20, fontWeight: 600,
+              color: '#2A1405', letterSpacing: '0.06em',
+            }}>New Testament</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-            {NT.map(book => (
-              <Link key={book.id} href={`/read/${book.id}/1`} style={{
-                padding: '12px 14px', background: TESTAMENT_COLORS.new,
-                border: '1px solid rgba(139,0,0,0.2)', borderRadius: 5,
-                textDecoration: 'none', display: 'block',
-              }}>
-                <div style={{ fontSize: 12, color: '#E8D0D0', fontFamily: 'Georgia, serif', marginBottom: 3 }}>{book.name}</div>
-                <div style={{ fontSize: 9, color: '#444', fontFamily: 'monospace' }}>
-                  {book.chapters.length} ch · {book.abbreviation}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+            {NT_BOOKS.map(book => (
+              <Link key={book.id} href={`/read/${book.id}/1`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: '#F0E6CC', border: '1px solid #D4BC8A',
+                  borderLeft: '2px solid #7A0E1C',
+                  borderRadius: 3, padding: '10px 12px',
+                  transition: 'background 0.15s',
+                }}>
+                  <div style={{
+                    fontFamily: 'Cinzel, serif', fontSize: 12, fontWeight: 500,
+                    color: '#2A1405', letterSpacing: '0.03em', marginBottom: 2,
+                  }}>{book.name}</div>
+                  <div style={{
+                    fontFamily: 'EB Garamond, serif', fontSize: 12, color: '#7A0E1C',
+                  }}>
+                    {book.chapters.length} ch.
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
-      </section>
 
-      <footer style={{ padding: '20px 24px', borderTop: '1px solid #1a1a1a', textAlign: 'center' }}>
-        <div style={{ fontSize: 9, color: '#2a2a2a', fontFamily: 'monospace', letterSpacing: '0.15em' }}>
-          DOUAY-RHEIMS BIBLE · CHALLONER REVISION · PUBLIC DOMAIN · STUDY COMMENTARY © 2025
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        background: '#2A1008', borderTop: '2px solid #9A7320',
+        padding: '28px 28px 24px',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          fontFamily: 'Cinzel Decorative, Cinzel, serif',
+          fontSize: 20, color: '#9A7320', marginBottom: 8,
+        }}>α · ✦ · Ω</div>
+        <div style={{
+          fontFamily: 'EB Garamond, serif', fontStyle: 'italic',
+          fontSize: 15, color: '#8A6840', marginBottom: 6,
+        }}>
+          "Verbum Domini Manet In Aeternum"
+        </div>
+        <div style={{
+          fontFamily: 'Cinzel, serif', fontSize: 9, color: '#4A2A10',
+          letterSpacing: '0.15em',
+        }}>
+          THE WORD OF THE LORD ENDURES FOREVER · DOUAY-RHEIMS · PUBLIC DOMAIN
         </div>
       </footer>
     </div>

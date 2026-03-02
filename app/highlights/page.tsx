@@ -1,23 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Trash2, BookMarked } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 type HighlightItem = {
-  book: string
-  chapter: number
-  verse: number
-  color: string
-  created_at: string
-  bookName: string
-  verseText: string
+  book: string; chapter: number; verse: number
+  color: string; created_at: string
+  bookName: string; verseText: string
 }
 
-const colorLabels: Record<string, { label: string; bg: string; ring: string }> = {
-  'yellow': { label: 'Yellow', bg: '#B8860B', ring: 'rgba(184,134,11,0.3)' },
-  'green': { label: 'Green', bg: '#32B450', ring: 'rgba(50,180,80,0.3)' },
-  'blue': { label: 'Blue', bg: '#4a9eff', ring: 'rgba(74,158,255,0.3)' },
-  'pink': { label: 'Pink', bg: '#EC4899', ring: 'rgba(236,72,153,0.3)' },
+const COLORS: Record<string, { label: string; swatch: string; bg: string; border: string }> = {
+  yellow: { label: 'Key Text', swatch: '#E8B840', bg: 'rgba(184,134,11,0.1)',  border: '#B8860B' },
+  blue:   { label: 'Marian',   swatch: '#4A6ABE', bg: 'rgba(26,42,94,0.08)',   border: '#1A2A5E' },
+  red:    { label: 'Christ',   swatch: '#A02030', bg: 'rgba(122,14,28,0.08)',  border: '#7A0E1C' },
+  green:  { label: 'Prayer',   swatch: '#4A8030', bg: 'rgba(42,74,26,0.08)',   border: '#2A4A1A' },
 }
 
 export default function HighlightsPage() {
@@ -28,14 +24,8 @@ export default function HighlightsPage() {
   useEffect(() => {
     fetch('/api/highlights-summary')
       .then(r => r.json())
-      .then(d => {
-        setHighlights(d.highlights || [])
-        setLoading(false)
-      })
-      .catch(e => {
-        console.error(e)
-        setLoading(false)
-      })
+      .then(d => { setHighlights(d.highlights || []); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   const deleteHighlight = async (h: HighlightItem) => {
@@ -43,82 +33,93 @@ export default function HighlightsPage() {
       method: 'DELETE',
       body: JSON.stringify({ book: h.book, chapter: h.chapter, verse: h.verse }),
     })
-    setHighlights(highlights.filter(x => !(x.book === h.book && x.chapter === h.chapter && x.verse === h.verse)))
+    setHighlights(hs => hs.filter(x => !(x.book === h.book && x.chapter === h.chapter && x.verse === h.verse)))
   }
 
   const filtered = filter ? highlights.filter(h => h.color === filter) : highlights
   const colorCounts = highlights.reduce((acc: Record<string, number>, h) => {
-    acc[h.color] = (acc[h.color] || 0) + 1
-    return acc
+    acc[h.color] = (acc[h.color] || 0) + 1; return acc
   }, {})
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405' }}>
+
       {/* Header */}
       <header style={{
-        borderBottom: '1px solid #1a1a1a', padding: '14px 24px',
-        display: 'flex', alignItems: 'center', gap: 16,
-        position: 'sticky', top: 0, background: '#050505', zIndex: 50,
+        background: '#2A1008', borderBottom: '2px solid #9A7320',
+        padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14,
+        position: 'sticky', top: 0, zIndex: 50,
       }}>
-        <Link href="/" style={{ textDecoration: 'none', fontSize: 10, color: '#8B0000', letterSpacing: '0.2em' }}>
-          ← D-R BIBLE
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 15, color: '#9A7320' }}>☧</span>
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#9A7320', letterSpacing: '0.15em' }}>D-R BIBLE</span>
         </Link>
-        <span style={{ color: '#1e1e1e' }}>·</span>
-        <span style={{ fontSize: 10, color: '#555', letterSpacing: '0.1em' }}>SAVED HIGHLIGHTS</span>
-        <span style={{ marginLeft: 'auto', fontSize: 10, color: '#333' }}>
-          {highlights.length} total
+        <span style={{ color: '#4A2010', fontSize: 12 }}>✦</span>
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#C9A848', letterSpacing: '0.1em' }}>
+          SAVED HIGHLIGHTS
+        </span>
+        <span style={{ marginLeft: 'auto', fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic', fontSize: 14, color: '#6A4828' }}>
+          {highlights.length} {highlights.length === 1 ? 'verse' : 'verses'} marked
         </span>
       </header>
 
-      <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
+
         {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 11, color: '#C9A84C', letterSpacing: '0.3em', marginBottom: 12 }}>
-            ✦ HIGHLIGHTS
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{
+            fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.35em',
+            color: '#9A7320', marginBottom: 14,
+          }}>✦ YOUR SCRIPTURE GARDEN ✦</div>
           <h1 style={{
-            fontFamily: 'Georgia, serif', fontSize: 28, color: '#F0E8D8',
-            marginBottom: 8, fontWeight: 700,
-          }}>Your Saved Highlights</h1>
+            fontFamily: 'Cinzel Decorative, Cinzel, serif',
+            fontSize: 26, fontWeight: 700, color: '#2A1405',
+            letterSpacing: '0.04em', marginBottom: 12,
+          }}>Marked Passages</h1>
           <p style={{
-            fontFamily: 'Georgia, serif', fontSize: 12, color: '#555',
-            lineHeight: 1.6,
+            fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+            fontSize: 17, color: '#5C3A1E', lineHeight: 1.65,
           }}>
             {highlights.length === 0
-              ? 'Start highlighting verses as you read. They\'ll appear here.'
-              : 'Click a highlight to navigate back to that verse. Delete with the trash icon.'}
+              ? 'As you read, tap any verse and mark it. Your passages will gather here.'
+              : 'Tap a reference to return to that passage in its chapter. Remove with the × icon.'}
           </p>
+          <div style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: '#9A7320', letterSpacing: '0.2em', marginTop: 18, opacity: 0.5 }}>
+            ─── ✦ ───
+          </div>
         </div>
 
-        {/* Filter buttons */}
+        {/* Filter bar */}
         {highlights.length > 0 && (
-          <div style={{
-            display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 28,
-            flexWrap: 'wrap',
-          }}>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' }}>
             <button onClick={() => setFilter(null)} style={{
-              padding: '8px 14px', borderRadius: 4,
-              background: filter === null ? '#C9A84C44' : 'transparent',
-              border: `1px solid ${filter === null ? '#C9A84C' : '#2a2a2a'}`,
-              color: filter === null ? '#C9A84C' : '#555',
-              fontFamily: 'monospace', fontSize: 9, cursor: 'pointer',
-              transition: 'all 0.2s',
+              padding: '7px 16px', borderRadius: 2,
+              background: filter === null ? '#2A1008' : '#EFE3C2',
+              border: `1px solid ${filter === null ? '#9A7320' : '#D4BC8A'}`,
+              color: filter === null ? '#C9A848' : '#5C3A1E',
+              fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.12em',
+              cursor: 'pointer', transition: 'all 0.2s',
             }}>
-              All ({highlights.length})
+              ALL ({highlights.length})
             </button>
             {Object.entries(colorCounts).map(([c, count]) => {
-              const cfg = colorLabels[c]
+              const cfg = COLORS[c]
               if (!cfg) return null
               return (
                 <button key={c} onClick={() => setFilter(c)} style={{
-                  padding: '8px 14px', borderRadius: 4,
-                  background: filter === c ? `${cfg.bg}44` : 'transparent',
-                  border: `1px solid ${filter === c ? cfg.bg : '#2a2a2a'}`,
-                  color: filter === c ? cfg.bg : '#555',
-                  fontFamily: 'monospace', fontSize: 9, cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 14px', borderRadius: 2,
+                  background: filter === c ? '#2A1008' : '#EFE3C2',
+                  border: `1px solid ${filter === c ? cfg.border : '#D4BC8A'}`,
+                  color: filter === c ? cfg.swatch : '#5C3A1E',
+                  fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.1em',
+                  cursor: 'pointer', transition: 'all 0.2s',
                 }}>
-                  {cfg.label} ({count})
+                  <span style={{
+                    display: 'inline-block', width: 10, height: 10,
+                    borderRadius: '50%', background: cfg.swatch, flexShrink: 0,
+                  }}/>
+                  {cfg.label.toUpperCase()} ({count})
                 </button>
               )
             })}
@@ -127,70 +128,79 @@ export default function HighlightsPage() {
 
         {/* Highlights list */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#333' }}>
-            Loading highlights...
+          <div style={{
+            textAlign: 'center', padding: '40px 0',
+            fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+            fontSize: 16, color: '#8B6040',
+          }}>
+            ✦ Loading your passages…
           </div>
         ) : filtered.length === 0 ? (
           <div style={{
-            textAlign: 'center', padding: '40px 20px', color: '#333',
-            fontFamily: 'Georgia, serif', fontSize: 14,
+            textAlign: 'center', padding: '40px 20px',
+            background: '#EFE3C2', border: '1px solid #D4BC8A', borderRadius: 4,
           }}>
-            {filter
-              ? `No highlights with this color.`
-              : 'No highlights yet. Click on a verse to highlight it.'}
+            <div style={{
+              fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+              fontSize: 17, color: '#8B6040', lineHeight: 1.7,
+            }}>
+              {filter ? `No passages marked with that colour.` : 'No passages marked yet.'}
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map((h, i) => {
-              const cfg = colorLabels[h.color] || { label: 'Unknown', bg: '#666', ring: 'rgba(100,100,100,0.3)' }
+              const cfg = COLORS[h.color] || { label: '—', swatch: '#888', bg: 'transparent', border: '#888' }
               return (
                 <div key={i} style={{
-                  background: cfg.ring,
-                  border: `1px solid ${cfg.bg}44`,
-                  borderLeft: `3px solid ${cfg.bg}`,
-                  borderRadius: 6, padding: '14px 16px',
+                  background: cfg.bg, border: '1px solid #D4BC8A',
+                  borderLeft: `4px solid ${cfg.border}`,
+                  borderRadius: 3, padding: '14px 16px',
                   display: 'flex', alignItems: 'flex-start', gap: 12,
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Verse ref */}
+                    {/* Ref */}
                     <Link href={`/read/${h.book}/${h.chapter}`} style={{
-                      display: 'block', textDecoration: 'none',
-                      fontSize: 10, color: cfg.bg, fontFamily: 'monospace', letterSpacing: '0.08em',
-                      marginBottom: 6, fontWeight: 700,
+                      display: 'block', textDecoration: 'none', marginBottom: 7,
                     }}>
-                      {h.bookName} {h.chapter}:{h.verse}
+                      <span style={{
+                        fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.08em',
+                        color: cfg.border, fontWeight: 600,
+                      }}>
+                        {h.bookName} {h.chapter}:{h.verse}
+                      </span>
+                      <span style={{
+                        marginLeft: 10, fontFamily: 'Cinzel, serif', fontSize: 8.5,
+                        letterSpacing: '0.12em', color: '#8B6040',
+                      }}>
+                        {cfg.label.toUpperCase()}
+                      </span>
                     </Link>
-
-                    {/* Verse text */}
+                    {/* Text */}
                     <blockquote style={{
-                      fontFamily: 'Georgia, serif', fontSize: 13, color: '#D8CEB8',
-                      lineHeight: 1.6, fontStyle: 'italic',
-                      margin: 0, marginBottom: 6,
+                      fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                      fontSize: 16, color: '#2A1405', lineHeight: 1.7, margin: 0, marginBottom: 6,
                     }}>
-                      "{h.verseText.slice(0, 140)}{h.verseText.length > 140 ? '...' : ''}"
+                      "{h.verseText.slice(0, 160)}{h.verseText.length > 160 ? '…' : ''}"
                     </blockquote>
-
-                    {/* Timestamp */}
+                    {/* Date */}
                     <div style={{
-                      fontSize: 9, color: '#444',
-                      fontFamily: 'monospace',
+                      fontFamily: 'EB Garamond, Georgia, serif', fontSize: 12, color: '#9A7320',
                     }}>
-                      {new Date(h.created_at).toLocaleDateString()} {new Date(h.created_at).toLocaleTimeString()}
+                      {new Date(h.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
 
-                  {/* Delete button */}
-                  <button
-                    onClick={() => deleteHighlight(h)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: '#444', padding: '4px 8px', flexShrink: 0,
-                      transition: 'color 0.2s',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#8B0000')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#444')}
+                  {/* Remove */}
+                  <button onClick={() => deleteHighlight(h)} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#C4B8A0', padding: '4px', flexShrink: 0,
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#7A0E1C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#C4B8A0')}
                   >
-                    <Trash2 size={16}/>
+                    <Trash2 size={15}/>
                   </button>
                 </div>
               )
@@ -198,6 +208,16 @@ export default function HighlightsPage() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer style={{
+        background: '#2A1008', borderTop: '2px solid #9A7320',
+        padding: '20px', textAlign: 'center',
+      }}>
+        <div style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#6A4828', letterSpacing: '0.15em' }}>
+          ☧ &nbsp; DOUAY-RHEIMS SACRED SCRIPTURE &nbsp; ☧
+        </div>
+      </footer>
     </div>
   )
 }

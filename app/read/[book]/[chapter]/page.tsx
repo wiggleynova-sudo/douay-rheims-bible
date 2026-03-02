@@ -8,10 +8,16 @@ import BookNavigator from '@/components/BookNavigator'
 import { Menu, Volume2, VolumeX, ChevronLeft, ChevronRight, X } from 'lucide-react'
 
 const HIGHLIGHT_BG: Record<string, string> = {
-  yellow: 'rgba(255,220,0,0.22)',
-  blue:   'rgba(74,158,255,0.22)',
-  red:    'rgba(220,50,50,0.22)',
-  green:  'rgba(50,180,80,0.22)',
+  yellow: 'rgba(184,134,11,0.22)',
+  blue:   'rgba(26,42,94,0.15)',
+  red:    'rgba(122,14,28,0.15)',
+  green:  'rgba(42,74,26,0.15)',
+}
+const HIGHLIGHT_BORDER: Record<string, string> = {
+  yellow: '#B8860B',
+  blue:   '#1A2A5E',
+  red:    '#7A0E1C',
+  green:  '#2A4A1A',
 }
 
 type VerseHighlight = { verse: number; color: string }
@@ -31,14 +37,12 @@ export default function ReadPage() {
   const [audioPlaying, setAudioPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Session ID
   useEffect(() => {
     if (!localStorage.getItem('bible_session')) {
       localStorage.setItem('bible_session', `session_${Date.now()}`)
     }
   }, [])
 
-  // Load highlights for this chapter
   useEffect(() => {
     const session = localStorage.getItem('bible_session') || 'default'
     fetch(`/api/highlight?session_id=${session}&book=${bookId}&chapter=${chapterN}`)
@@ -47,18 +51,13 @@ export default function ReadPage() {
       .catch(() => {})
   }, [bookId, chapterN])
 
-  // Stop audio on chapter change
   useEffect(() => {
     audioRef.current?.pause()
     setAudioPlaying(false)
   }, [bookId, chapterN])
 
   const readChapterAloud = async () => {
-    if (audioPlaying) {
-      audioRef.current?.pause()
-      setAudioPlaying(false)
-      return
-    }
+    if (audioPlaying) { audioRef.current?.pause(); setAudioPlaying(false); return }
     if (!chapter) return
     const text = chapter.verses.map(v => v.text).join(' ')
     setAudioPlaying(true)
@@ -77,20 +76,16 @@ export default function ReadPage() {
 
   const navigateChapter = (dir: -1 | 1) => {
     const newCh = chapterN + dir
-    const targetChapter = book?.chapters.find(c => c.chapter === newCh)
-    if (!targetChapter) {
-      // Navigate to next/prev book
-      const allBooks = BIBLE_BOOKS
-      const bookIdx = allBooks.findIndex(b => b.id === bookId)
-      if (dir === 1 && bookIdx < allBooks.length - 1) {
-        router.push(`/read/${allBooks[bookIdx + 1].id}/1`)
-      } else if (dir === -1 && bookIdx > 0) {
-        const prevBook = allBooks[bookIdx - 1]
-        router.push(`/read/${prevBook.id}/${prevBook.chapters[prevBook.chapters.length - 1].chapter}`)
-      }
+    if (book?.chapters.find(c => c.chapter === newCh)) {
+      router.push(`/read/${bookId}/${newCh}`)
       return
     }
-    router.push(`/read/${bookId}/${newCh}`)
+    const idx = BIBLE_BOOKS.findIndex(b => b.id === bookId)
+    if (dir === 1 && idx < BIBLE_BOOKS.length - 1) router.push(`/read/${BIBLE_BOOKS[idx + 1].id}/1`)
+    else if (dir === -1 && idx > 0) {
+      const prev = BIBLE_BOOKS[idx - 1]
+      router.push(`/read/${prev.id}/${prev.chapters[prev.chapters.length - 1].chapter}`)
+    }
   }
 
   const handleNavigateFromDrawer = (toBook: string, toChapter: number) => {
@@ -99,124 +94,134 @@ export default function ReadPage() {
   }
 
   const addHighlight = (verse: number, color: string) => {
-    setHighlights(prev => {
-      const filtered = prev.filter(h => h.verse !== verse)
-      return [...filtered, { verse, color }]
-    })
+    setHighlights(prev => [...prev.filter(h => h.verse !== verse), { verse, color }])
   }
 
-  if (!book || !chapter) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#8B0000', marginBottom: 12 }}>Book not found</div>
-          <Link href="/" style={{ color: '#C9A84C', textDecoration: 'none', fontSize: 12 }}>← Back to home</Link>
-        </div>
+  if (!book || !chapter) return (
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Cinzel, serif', color: '#7A0E1C', marginBottom: 16 }}>This book is not yet in this edition.</div>
+        <Link href="/" style={{ fontFamily: 'Cinzel, serif', fontSize: 12, color: '#9A7320' }}>← Return to Library</Link>
       </div>
-    )
-  }
+    </div>
+  )
 
   const prevChapter = book.chapters.find(c => c.chapter === chapterN - 1)
-  const nextChapter = book.chapters.find(c => c.chapter === chapterN + 1)
+  const bookIdx = BIBLE_BOOKS.findIndex(b => b.id === bookId)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#E8E8E8', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Top bar */}
+      {/* ── Header ── */}
       <header style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-        background: '#070707', borderBottom: '1px solid #1a1a1a',
+        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px',
+        background: '#2A1008', borderBottom: '2px solid #9A7320',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <button onClick={() => setSidebarOpen(o => !o)} style={{
-          background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: 4,
-        }}><Menu size={18}/></button>
+          background: 'none', border: '1px solid #4A2010', borderRadius: 3,
+          color: '#9A7320', cursor: 'pointer', padding: '4px 7px',
+        }}><Menu size={16}/></button>
 
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <span style={{ fontSize: 10, color: '#8B0000', fontFamily: 'monospace', letterSpacing: '0.15em' }}>✟ D-R BIBLE</span>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, color: '#9A7320' }}>☧</span>
+          <span style={{
+            fontFamily: 'Cinzel, serif', fontSize: 10,
+            color: '#9A7320', letterSpacing: '0.15em',
+          }}>D-R BIBLE</span>
         </Link>
 
-        <span style={{ color: '#2a2a2a', fontSize: 12 }}>·</span>
-        <span style={{ fontSize: 11, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-          {book.name} {chapterN}
+        <span style={{ color: '#4A2010', fontSize: 13 }}>✦</span>
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 13, color: '#C9A848', letterSpacing: '0.04em' }}>
+          {book.name} · {chapterN}
         </span>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <Link href={`/parallel/${bookId}/${chapterN}`} style={{
-            textDecoration: 'none', fontSize: 10, color: '#444',
-            fontFamily: 'monospace', letterSpacing: '0.08em',
-            border: '1px solid #2a2a2a', borderRadius: 4, padding: '5px 10px',
+            fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.1em',
+            color: '#9A7320', textDecoration: 'none',
+            border: '1px solid #4A2010', borderRadius: 3, padding: '5px 12px',
           }}>PARALLEL</Link>
-          <button onClick={readChapterAloud} title={audioPlaying ? 'Stop' : 'Listen to chapter'} style={{
-            background: audioPlaying ? 'rgba(139,0,0,0.2)' : 'none',
-            border: `1px solid ${audioPlaying ? '#8B0000' : '#2a2a2a'}`,
-            color: audioPlaying ? '#FF6666' : '#444',
-            borderRadius: 4, padding: '5px 10px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'monospace', fontSize: 10,
+          <button onClick={readChapterAloud} style={{
+            background: audioPlaying ? 'rgba(122,14,28,0.3)' : 'transparent',
+            border: `1px solid ${audioPlaying ? '#7A0E1C' : '#4A2010'}`,
+            borderRadius: 3, color: audioPlaying ? '#E88080' : '#9A7320',
+            cursor: 'pointer', padding: '5px 12px',
+            display: 'flex', alignItems: 'center', gap: 5,
+            fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.1em',
           }}>
-            {audioPlaying ? <VolumeX size={13}/> : <Volume2 size={13}/>}
+            {audioPlaying ? <VolumeX size={12}/> : <Volume2 size={12}/>}
             {audioPlaying ? 'STOP' : 'LISTEN'}
           </button>
         </div>
       </header>
 
-      {/* Main layout */}
       <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
 
-        {/* Sidebar overlay (mobile) */}
+        {/* Sidebar overlay */}
         {sidebarOpen && (
           <div onClick={() => setSidebarOpen(false)} style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-            zIndex: 150,
+            position: 'fixed', inset: 0, background: 'rgba(42,16,8,0.6)', zIndex: 150,
           }}/>
         )}
 
         {/* Sidebar */}
         <div style={{
-          position: 'fixed', left: 0, top: 55, bottom: 0, width: 200,
+          position: 'fixed', left: 0, top: 55, bottom: 0, width: 210,
           zIndex: 160,
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.2s ease',
+          transition: 'transform 0.22s ease',
         }}>
-          <div style={{ position: 'absolute', right: -36, top: 10 }}>
-            <button onClick={() => setSidebarOpen(false)} style={{
-              background: '#0c0c0c', border: '1px solid #2a2a2a', color: '#555',
-              borderRadius: '0 4px 4px 0', padding: '4px 8px', cursor: 'pointer',
-            }}><X size={13}/></button>
-          </div>
+          <button onClick={() => setSidebarOpen(false)} style={{
+            position: 'absolute', right: -34, top: 12,
+            background: '#2A1008', border: '1px solid #9A7320',
+            color: '#9A7320', borderRadius: '0 3px 3px 0',
+            padding: '4px 8px', cursor: 'pointer',
+          }}><X size={12}/></button>
           <BookNavigator currentBook={bookId} currentChapter={chapterN} onClose={() => setSidebarOpen(false)}/>
         </div>
 
-        {/* Reading column */}
-        <main style={{
-          flex: 1, maxWidth: 680, margin: '0 auto', padding: '32px 20px 120px',
-        }}>
+        {/* ── Reading Column ── */}
+        <main style={{ flex: 1, maxWidth: 680, margin: '0 auto', padding: '40px 24px 120px' }}>
+
           {/* Chapter header */}
-          <div style={{ marginBottom: 28, textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: '#8B0000', letterSpacing: '0.25em', marginBottom: 8, fontFamily: 'monospace' }}>
-              {book.testament === 'old' ? 'OLD TESTAMENT' : 'NEW TESTAMENT'}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{
+              fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.3em',
+              color: '#9A7320', marginBottom: 10,
+            }}>
+              {book.testament === 'old' ? '✦ OLD TESTAMENT ✦' : '✦ NEW TESTAMENT ✦'}
             </div>
-            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, color: '#F0E8D8', marginBottom: 4, fontWeight: 700 }}>
-              {book.name}
-            </h1>
-            <div style={{ fontSize: 18, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-              Chapter {chapterN}
-            </div>
+            <h1 style={{
+              fontFamily: 'Cinzel Decorative, Cinzel, serif',
+              fontSize: 28, fontWeight: 700, color: '#7A0E1C',
+              letterSpacing: '0.04em', marginBottom: 6,
+            }}>{book.name}</h1>
+            <div style={{
+              fontFamily: 'Cinzel, serif', fontSize: 16, color: '#9A7320',
+              letterSpacing: '0.1em',
+            }}>Chapter {chapterN}</div>
+            <div style={{
+              fontFamily: 'EB Garamond, Georgia, serif', fontSize: 18,
+              color: '#9A7320', letterSpacing: '0.2em', marginTop: 14, opacity: 0.6,
+            }}>─── ✦ ───</div>
           </div>
 
           {/* Hint */}
           <div style={{
-            fontSize: 10, color: '#2a2a2a', fontFamily: 'monospace',
-            textAlign: 'center', marginBottom: 24, letterSpacing: '0.1em',
+            textAlign: 'center', marginBottom: 28,
+            fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+            fontSize: 14, color: '#8B6040', letterSpacing: '0.02em',
           }}>
-            TAP ANY VERSE FOR COMMENTARY ↓
+            ✝ Tap any verse for commentary, Church Fathers, and study tools
           </div>
 
-          {/* Verses */}
-          <div style={{ lineHeight: 1, marginBottom: 32 }}>
-            {chapter.verses.map(v => {
+          {/* ── Verse text ── */}
+          <div style={{ lineHeight: 1, marginBottom: 40 }}>
+            {chapter.verses.map((v, idx) => {
               const hl = highlights.find(h => h.verse === v.verse)
               const isActive = activeVerse?.verse === v.verse
+              const isDropCap = chapterN === 1 && idx === 0
 
               return (
                 <span
@@ -225,68 +230,81 @@ export default function ReadPage() {
                   style={{
                     display: 'inline',
                     cursor: 'pointer',
-                    background: isActive ? 'rgba(201,168,76,0.18)' : hl ? HIGHLIGHT_BG[hl.color] : 'transparent',
-                    borderBottom: isActive ? '1px solid rgba(201,168,76,0.5)' : hl ? `1px solid ${hl.color === 'yellow' ? '#FFD700' : hl.color === 'blue' ? '#4a9eff' : hl.color === 'red' ? '#DC3232' : '#32B450'}22` : 'none',
-                    borderRadius: 2, padding: '1px 0',
+                    background: isActive
+                      ? 'rgba(122,14,28,0.1)'
+                      : hl ? HIGHLIGHT_BG[hl.color] : 'transparent',
+                    borderBottom: isActive
+                      ? '1px solid rgba(122,14,28,0.4)'
+                      : hl ? `1px solid ${HIGHLIGHT_BORDER[hl.color]}44` : 'none',
+                    borderRadius: 2,
                     transition: 'background 0.15s',
                   }}
                 >
                   <sup style={{
-                    fontSize: 10, color: isActive ? '#C9A84C' : '#5a4520',
-                    fontFamily: 'monospace', marginRight: 4, marginLeft: 6,
+                    fontSize: 10,
+                    fontFamily: 'Cinzel, serif',
+                    color: isActive ? '#7A0E1C' : hl ? HIGHLIGHT_BORDER[hl.color] : '#B8952A',
+                    marginRight: 3, marginLeft: 8,
                     verticalAlign: 'super', lineHeight: 0,
+                    letterSpacing: '0.02em',
                     position: 'relative',
                   }}>
                     {v.verse}
                     {hl && (
                       <span style={{
                         display: 'inline-block', width: 4, height: 4, borderRadius: '50%',
-                        background: hl.color === 'yellow' ? '#FFD700' : hl.color === 'blue' ? '#4a9eff' : hl.color === 'green' ? '#32B450' : '#DC3232',
-                        marginLeft: 3, verticalAlign: 'super', position: 'relative', bottom: 1,
+                        background: HIGHLIGHT_BORDER[hl.color],
+                        marginLeft: 2, verticalAlign: 'super', position: 'relative', bottom: 1,
                       }}/>
                     )}
                   </sup>
-                  <span style={{
-                    fontFamily: 'Georgia, serif',
-                    fontSize: 17, color: '#D8CEB8', lineHeight: 1.85,
-                  }}>{v.text} </span>
+                  <span
+                    className={isDropCap ? 'drop-cap' : ''}
+                    style={{
+                      fontFamily: 'EB Garamond, Georgia, serif',
+                      fontSize: 19,
+                      color: isActive ? '#2A1405' : '#3A1E0A',
+                      lineHeight: 1.95,
+                    }}
+                  >
+                    {v.text}{' '}
+                  </span>
                 </span>
               )
             })}
           </div>
 
-          {/* Chapter nav */}
+          {/* Chapter navigation */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            paddingTop: 24, borderTop: '1px solid #1a1a1a',
+            paddingTop: 24, borderTop: '1px solid #D4BC8A',
           }}>
-            <button
-              onClick={() => navigateChapter(-1)}
-              disabled={!prevChapter && BIBLE_BOOKS.findIndex(b => b.id === bookId) === 0}
+            <button onClick={() => navigateChapter(-1)}
+              disabled={!prevChapter && bookIdx === 0}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: 'none', border: '1px solid #2a2a2a', borderRadius: 4,
-                color: '#555', fontFamily: 'monospace', fontSize: 10,
-                padding: '8px 14px', cursor: 'pointer', letterSpacing: '0.1em',
-              }}
-            >
-              <ChevronLeft size={13}/> PREV
+                background: '#EFE3C2', border: '1px solid #D4BC8A', borderRadius: 3,
+                color: '#5C3A1E', fontFamily: 'Cinzel, serif', fontSize: 10,
+                letterSpacing: '0.1em', padding: '9px 16px', cursor: 'pointer',
+                opacity: (!prevChapter && bookIdx === 0) ? 0.4 : 1,
+              }}>
+              <ChevronLeft size={12}/> PREV
             </button>
 
-            <span style={{ fontSize: 10, color: '#2a2a2a', fontFamily: 'monospace' }}>
-              {book.name} {chapterN}
+            <span style={{
+              fontFamily: 'Cinzel, serif', fontSize: 11, color: '#9A7320',
+              letterSpacing: '0.08em',
+            }}>
+              {book.abbreviation} {chapterN}
             </span>
 
-            <button
-              onClick={() => navigateChapter(1)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'none', border: '1px solid #2a2a2a', borderRadius: 4,
-                color: '#555', fontFamily: 'monospace', fontSize: 10,
-                padding: '8px 14px', cursor: 'pointer', letterSpacing: '0.1em',
-              }}
-            >
-              NEXT <ChevronRight size={13}/>
+            <button onClick={() => navigateChapter(1)} style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: '#EFE3C2', border: '1px solid #D4BC8A', borderRadius: 3,
+              color: '#5C3A1E', fontFamily: 'Cinzel, serif', fontSize: 10,
+              letterSpacing: '0.1em', padding: '9px 16px', cursor: 'pointer',
+            }}>
+              NEXT <ChevronRight size={12}/>
             </button>
           </div>
         </main>
