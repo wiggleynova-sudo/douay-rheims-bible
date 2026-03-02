@@ -252,6 +252,8 @@ function seedData(db: any) {
   console.log('✓ Bible DB seeded')
 }
 
+export { getDb }
+
 export function getCommentaries(book: string, chapter: number, verse: number) {
   const db = getDb()
   return db.prepare('SELECT * FROM commentaries WHERE book=? AND chapter=? AND verse=? ORDER BY id').all(book, chapter, verse)

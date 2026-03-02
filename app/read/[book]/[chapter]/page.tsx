@@ -235,7 +235,17 @@ export default function ReadPage() {
                     fontSize: 10, color: isActive ? '#C9A84C' : '#5a4520',
                     fontFamily: 'monospace', marginRight: 4, marginLeft: 6,
                     verticalAlign: 'super', lineHeight: 0,
-                  }}>{v.verse}</sup>
+                    position: 'relative',
+                  }}>
+                    {v.verse}
+                    {hl && (
+                      <span style={{
+                        display: 'inline-block', width: 4, height: 4, borderRadius: '50%',
+                        background: hl.color === 'yellow' ? '#FFD700' : hl.color === 'blue' ? '#4a9eff' : hl.color === 'green' ? '#32B450' : '#DC3232',
+                        marginLeft: 3, verticalAlign: 'super', position: 'relative', bottom: 1,
+                      }}/>
+                    )}
+                  </sup>
                   <span style={{
                     fontFamily: 'Georgia, serif',
                     fontSize: 17, color: '#D8CEB8', lineHeight: 1.85,
