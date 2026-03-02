@@ -142,6 +142,11 @@ export default function ReadPage() {
         </span>
 
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <Link href={`/parallel/${bookId}/${chapterN}`} style={{
+            textDecoration: 'none', fontSize: 10, color: '#444',
+            fontFamily: 'monospace', letterSpacing: '0.08em',
+            border: '1px solid #2a2a2a', borderRadius: 4, padding: '5px 10px',
+          }}>PARALLEL</Link>
           <button onClick={readChapterAloud} title={audioPlaying ? 'Stop' : 'Listen to chapter'} style={{
             background: audioPlaying ? 'rgba(139,0,0,0.2)' : 'none',
             border: `1px solid ${audioPlaying ? '#8B0000' : '#2a2a2a'}`,

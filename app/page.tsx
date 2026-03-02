@@ -39,11 +39,17 @@ export default function HomePage() {
             CHALLONER REVISION · WITH COMMENTARY
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link href="/study" style={{ fontSize: 10, color: '#C9A84C', textDecoration: 'none', letterSpacing: '0.1em' }}>
+            STUDY PATHS
+          </Link>
+          <Link href="/parallel/john/1" style={{ fontSize: 10, color: '#555', textDecoration: 'none', letterSpacing: '0.1em' }}>
+            PARALLEL
+          </Link>
           <Link href="/read/matthew/5" style={{ fontSize: 10, color: '#555', textDecoration: 'none', letterSpacing: '0.1em' }}>
             READ
           </Link>
-          <Link href="/admin/commentary" style={{ fontSize: 10, color: '#555', textDecoration: 'none', letterSpacing: '0.1em' }}>
+          <Link href="/admin/commentary" style={{ fontSize: 10, color: '#333', textDecoration: 'none', letterSpacing: '0.1em' }}>
             ADMIN
           </Link>
         </div>
