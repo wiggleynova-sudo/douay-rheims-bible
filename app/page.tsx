@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BIBLE_BOOKS } from '@/data/bible-data'
+import NavUserBadge from '@/components/NavUserBadge'
 
 export const metadata = { title: 'Douay-Rheims Catholic Bible — With Commentary' }
 
@@ -42,25 +43,25 @@ export default function Home() {
           {/* Nav */}
           <nav style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {[
-              { href: '/study',        label: 'Study Paths', gold: true },
-              { href: '/highlights',   label: 'Highlights' },
+              { href: '/study',           label: 'Study Paths', gold: true },
+              { href: '/highlights',      label: 'Highlights' },
               { href: '/parallel/john/1', label: 'Parallel' },
-              { href: '/read/matthew/5',  label: 'Read' },
-              { href: '/admin/commentary', label: 'Admin' },
-            ].map((item, i, arr) => (
-              <span key={item.href} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {i > 0 && <span style={{ color: '#4A2010', fontSize: 10 }}>✦</span>}
+              { href: '/read/genesis/1',  label: 'Read' },
+            ].map((item, i) => (
+              <span key={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {i > 0 && <span style={{ color: '#4A2010', fontSize: 11 }}>✦</span>}
                 <Link href={item.href} style={{
-                  fontFamily: 'Cinzel, serif', fontSize: 11,
-                  letterSpacing: '0.12em',
-                  color: item.gold ? '#C9A848' : '#9A7888',
+                  fontFamily: 'Cinzel, serif', fontSize: 13,
+                  letterSpacing: '0.1em',
+                  color: item.gold ? '#C9A848' : '#9A7320',
                   textDecoration: 'none',
-                  transition: 'color 0.2s',
                 }}>
                   {item.label.toUpperCase()}
                 </Link>
               </span>
             ))}
+            <span style={{ color: '#4A2010', fontSize: 11, marginLeft: 4 }}>✦</span>
+            <NavUserBadge/>
           </nav>
         </div>
       </header>

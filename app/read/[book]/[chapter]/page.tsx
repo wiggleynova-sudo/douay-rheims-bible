@@ -5,7 +5,15 @@ import Link from 'next/link'
 import { BIBLE_BOOKS, getBook, getChapter } from '@/data/bible-data'
 import CommentaryDrawer from '@/components/CommentaryDrawer'
 import BookNavigator from '@/components/BookNavigator'
-import { Menu, Volume2, VolumeX, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useAuth } from '@/components/AuthProvider'
+import { Menu, Volume2, VolumeX, ChevronLeft, ChevronRight, X, Type, LogIn, LogOut, User } from 'lucide-react'
+
+const FONT_SIZES = [
+  { key: 'sm', label: 'A',  size: 14 },
+  { key: 'md', label: 'A',  size: 17 },
+  { key: 'lg', label: 'A',  size: 21 },
+  { key: 'xl', label: 'A',  size: 25 },
+]
 
 const HIGHLIGHT_BG: Record<string, string> = {
   yellow: 'rgba(184,134,11,0.22)',
@@ -31,17 +39,37 @@ export default function ReadPage() {
   const book    = getBook(bookId)
   const chapter = getChapter(bookId, chapterN)
 
+  const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeVerse, setActiveVerse] = useState<{ verse: number; text: string } | null>(null)
   const [highlights, setHighlights] = useState<VerseHighlight[]>([])
   const [audioPlaying, setAudioPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [fontMenuOpen, setFontMenuOpen] = useState(false)
+  const [fontSize, setFontSize] = useState('md')
 
   useEffect(() => {
     if (!localStorage.getItem('bible_session')) {
       localStorage.setItem('bible_session', `session_${Date.now()}`)
     }
+    // Apply saved font size
+    const saved = (localStorage.getItem('fontSize') || 'md') as string
+    setFontSize(saved)
+    document.documentElement.setAttribute('data-fsize', saved)
   }, [])
+
+  const changeFontSize = (key: string) => {
+    setFontSize(key)
+    setFontMenuOpen(false)
+    document.documentElement.setAttribute('data-fsize', key)
+    localStorage.setItem('fontSize', key)
+    if (user) {
+      fetch('/api/auth/prefs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fontSize: key }),
+      })
+    }
+  }
 
   useEffect(() => {
     const session = localStorage.getItem('bible_session') || 'default'
@@ -114,45 +142,112 @@ export default function ReadPage() {
 
       {/* ── Header ── */}
       <header style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px',
+        display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px',
         background: '#2A1008', borderBottom: '2px solid #9A7320',
-        position: 'sticky', top: 0, zIndex: 100,
+        position: 'sticky', top: 0, zIndex: 100, flexWrap: 'nowrap',
       }}>
+        {/* Hamburger */}
         <button onClick={() => setSidebarOpen(o => !o)} style={{
           background: 'none', border: '1px solid #4A2010', borderRadius: 3,
-          color: '#9A7320', cursor: 'pointer', padding: '4px 7px',
-        }}><Menu size={16}/></button>
+          color: '#9A7320', cursor: 'pointer', padding: '6px 8px', flexShrink: 0,
+        }}><Menu size={17}/></button>
 
-        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 16, color: '#9A7320' }}>☧</span>
-          <span style={{
-            fontFamily: 'Cinzel, serif', fontSize: 10,
-            color: '#9A7320', letterSpacing: '0.15em',
-          }}>D-R BIBLE</span>
+        {/* Logo + book */}
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          <span style={{ fontSize: 18, color: '#9A7320' }}>☧</span>
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: 13, color: '#9A7320', letterSpacing: '0.12em' }}>
+            D-R BIBLE
+          </span>
         </Link>
 
-        <span style={{ color: '#4A2010', fontSize: 13 }}>✦</span>
-        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 13, color: '#C9A848', letterSpacing: '0.04em' }}>
-          {book.name} · {chapterN}
+        <span style={{ color: '#4A2010', fontSize: 14, flexShrink: 0 }}>✦</span>
+        <span style={{
+          fontFamily: 'Cinzel, serif', fontSize: 14, color: '#C9A848',
+          letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {book.name} {chapterN}
         </span>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+        {/* Right controls */}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+
+          {/* Font size toggle */}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setFontMenuOpen(o => !o)} title="Font size" style={{
+              background: fontMenuOpen ? 'rgba(154,115,32,0.25)' : 'transparent',
+              border: '1px solid #4A2010', borderRadius: 3,
+              color: '#9A7320', cursor: 'pointer', padding: '6px 9px',
+              display: 'flex', alignItems: 'center', gap: 4,
+              fontFamily: 'Cinzel, serif', fontSize: 12, letterSpacing: '0.05em',
+            }}>
+              <Type size={13}/> Aa
+            </button>
+            {fontMenuOpen && (
+              <div style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                background: '#F7F0DC', border: '1px solid #D4BC8A',
+                borderRadius: 3, zIndex: 200, overflow: 'hidden',
+                boxShadow: '0 4px 12px rgba(42,16,8,0.2)',
+              }}>
+                {FONT_SIZES.map(f => (
+                  <button key={f.key} onClick={() => changeFontSize(f.key)} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 18px', width: '100%',
+                    background: fontSize === f.key ? '#EFE3C2' : 'transparent',
+                    border: 'none', borderBottom: '1px solid #E6D5A8',
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>
+                    <span style={{ fontFamily: 'EB Garamond, Georgia, serif', fontSize: f.size, color: '#2A1405', lineHeight: 1 }}>A</span>
+                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.12em', color: fontSize === f.key ? '#7A0E1C' : '#9A7320' }}>
+                      {f.key === 'sm' ? 'SMALL' : f.key === 'md' ? 'MEDIUM' : f.key === 'lg' ? 'LARGE' : 'X-LARGE'}
+                    </span>
+                    {fontSize === f.key && <span style={{ color: '#7A0E1C', fontSize: 12, marginLeft: 'auto' }}>✦</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Parallel */}
           <Link href={`/parallel/${bookId}/${chapterN}`} style={{
-            fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.1em',
+            fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.08em',
             color: '#9A7320', textDecoration: 'none',
-            border: '1px solid #4A2010', borderRadius: 3, padding: '5px 12px',
-          }}>PARALLEL</Link>
+            border: '1px solid #4A2010', borderRadius: 3, padding: '6px 10px',
+          }}>Parallel</Link>
+
+          {/* Listen */}
           <button onClick={readChapterAloud} style={{
             background: audioPlaying ? 'rgba(122,14,28,0.3)' : 'transparent',
             border: `1px solid ${audioPlaying ? '#7A0E1C' : '#4A2010'}`,
             borderRadius: 3, color: audioPlaying ? '#E88080' : '#9A7320',
-            cursor: 'pointer', padding: '5px 12px',
-            display: 'flex', alignItems: 'center', gap: 5,
-            fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.1em',
+            cursor: 'pointer', padding: '6px 10px',
+            display: 'flex', alignItems: 'center', gap: 4,
           }}>
-            {audioPlaying ? <VolumeX size={12}/> : <Volume2 size={12}/>}
-            {audioPlaying ? 'STOP' : 'LISTEN'}
+            {audioPlaying ? <VolumeX size={14}/> : <Volume2 size={14}/>}
           </button>
+
+          {/* User / Login */}
+          {user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
+                fontSize: 13, color: '#C9A848',
+              }}>{user.displayName?.split(' ')[0] || user.email.split('@')[0]}</span>
+              <button onClick={logout} title="Sign out" style={{
+                background: 'none', border: '1px solid #4A2010', borderRadius: 3,
+                color: '#6A4828', cursor: 'pointer', padding: '5px 7px',
+              }}><LogOut size={13}/></button>
+            </div>
+          ) : (
+            <Link href="/login" title="Sign in" style={{
+              border: '1px solid #9A7320', borderRadius: 3,
+              color: '#C9A848', padding: '6px 10px', textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.08em',
+            }}>
+              <LogIn size={13}/> Sign In
+            </Link>
+          )}
         </div>
       </header>
 
@@ -262,9 +357,9 @@ export default function ReadPage() {
                     className={isDropCap ? 'drop-cap' : ''}
                     style={{
                       fontFamily: 'EB Garamond, Georgia, serif',
-                      fontSize: 19,
+                      fontSize: 'var(--verse-size)',
                       color: isActive ? '#2A1405' : '#3A1E0A',
-                      lineHeight: 1.95,
+                      lineHeight: 'var(--verse-lh)',
                     }}
                   >
                     {v.text}{' '}

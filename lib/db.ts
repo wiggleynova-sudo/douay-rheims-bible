@@ -72,6 +72,23 @@ function getDb() {
       relationship  TEXT DEFAULT 'thematic'
     );
     CREATE INDEX IF NOT EXISTS idx_xref ON cross_refs(from_book, from_chapter, from_verse);
+
+    CREATE TABLE IF NOT EXISTS users (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      email         TEXT UNIQUE NOT NULL,
+      display_name  TEXT NOT NULL DEFAULT '',
+      password_hash TEXT NOT NULL,
+      font_size     TEXT DEFAULT 'md',
+      created_at    INTEGER DEFAULT (strftime('%s','now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      token      TEXT PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER DEFAULT (strftime('%s','now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_auth_sessions ON auth_sessions(user_id);
   `)
 
   // Seed commentaries if empty
@@ -295,4 +312,88 @@ export function saveNote(session_id: string, book: string, chapter: number, vers
 export function getNotes(session_id: string, book: string, chapter: number, verse: number) {
   const db = getDb()
   return db.prepare('SELECT * FROM notes WHERE session_id=? AND book=? AND chapter=? AND verse=? ORDER BY created_at').all(session_id, book, chapter, verse)
+}
+
+// ── AUTH FUNCTIONS ──────────────────────────────────────────────
+import crypto from 'crypto'
+
+/** Hash a password using scrypt (built-in Node crypto — no npm needed) */
+export async function hashPassword(password: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16).toString('hex')
+    crypto.scrypt(password, salt, 64, (err, buf) => {
+      if (err) reject(err)
+      else resolve(`${salt}:${buf.toString('hex')}`)
+    })
+  })
+}
+
+/** Compare a plain password against a stored hash */
+export async function verifyPassword(plain: string, stored: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const [salt, hash] = stored.split(':')
+    crypto.scrypt(plain, salt, 64, (err, buf) => {
+      if (err) reject(err)
+      else resolve(crypto.timingSafeEqual(Buffer.from(hash, 'hex'), buf))
+    })
+  })
+}
+
+/** Create a user account */
+export async function createUser(email: string, displayName: string, password: string) {
+  const db = getDb()
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase())
+  if (existing) throw new Error('Email already registered')
+  const hash = await hashPassword(password)
+  const result = db.prepare(
+    'INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)'
+  ).run(email.toLowerCase(), displayName, hash)
+  return result.lastInsertRowid as number
+}
+
+/** Login — returns user row or null */
+export async function loginUser(email: string, password: string) {
+  const db = getDb()
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase()) as any
+  if (!user) return null
+  const ok = await verifyPassword(password, user.password_hash)
+  if (!ok) return null
+  return user
+}
+
+/** Create a session token for a user (30-day expiry) */
+export function createSession(userId: number): string {
+  const db = getDb()
+  const token = crypto.randomBytes(32).toString('hex')
+  const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 // 30 days
+  db.prepare('INSERT INTO auth_sessions (token, user_id, expires_at) VALUES (?, ?, ?)')
+    .run(token, userId, expires)
+  return token
+}
+
+/** Verify a session token — returns user row or null */
+export function verifySession(token: string) {
+  if (!token) return null
+  const db = getDb()
+  const now = Math.floor(Date.now() / 1000)
+  const row = db.prepare(`
+    SELECT u.* FROM auth_sessions s JOIN users u ON s.user_id = u.id
+    WHERE s.token = ? AND s.expires_at > ?
+  `).get(token, now) as any
+  return row || null
+}
+
+/** Delete a session (logout) */
+export function deleteSession(token: string) {
+  getDb().prepare('DELETE FROM auth_sessions WHERE token = ?').run(token)
+}
+
+/** Get user by ID */
+export function getUserById(id: number) {
+  return getDb().prepare('SELECT id, email, display_name, font_size FROM users WHERE id = ?').get(id) as any
+}
+
+/** Update user font size preference */
+export function setUserFontSize(userId: number, size: string) {
+  getDb().prepare('UPDATE users SET font_size = ? WHERE id = ?').run(size, userId)
 }

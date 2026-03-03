@@ -1,5 +1,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;          /* block browser dark-mode override */
+  forced-color-adjust: none;    /* block high-contrast mode override */
+}
 
 body {
   background: #F7F0DC;
@@ -10,6 +14,16 @@ body {
 
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
+
+/* Font size preference — controlled via JS / localStorage */
+:root {
+  --verse-size: 19px;
+  --verse-lh: 1.95;
+}
+[data-fsize="sm"] { --verse-size: 16px; --verse-lh: 1.85; }
+[data-fsize="md"] { --verse-size: 19px; --verse-lh: 1.95; }
+[data-fsize="lg"] { --verse-size: 23px; --verse-lh: 2.05; }
+[data-fsize="xl"] { --verse-size: 27px; --verse-lh: 2.1;  }
 
 /* Church-appropriate scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 6px; }

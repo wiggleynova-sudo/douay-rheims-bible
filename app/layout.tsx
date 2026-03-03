@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
   title: 'Douay-Rheims Catholic Bible | With Commentary',
@@ -16,9 +17,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        <meta name="color-scheme" content="light"/>
+        <meta name="theme-color" content="#2A1008"/>
       </head>
       <body style={{ margin: 0, padding: 0, background: '#F7F0DC', color: '#2A1405' }}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   )
