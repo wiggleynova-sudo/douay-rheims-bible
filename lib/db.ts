@@ -314,6 +314,33 @@ export function getNotes(session_id: string, book: string, chapter: number, vers
   return db.prepare('SELECT * FROM notes WHERE session_id=? AND book=? AND chapter=? AND verse=? ORDER BY created_at').all(session_id, book, chapter, verse)
 }
 
+// ── BIBLE VERSES (scraped from drbo.org) ────────────────────────────────────
+export function createVersesTable() {
+  const db = getDb()
+  db.exec(`CREATE TABLE IF NOT EXISTS bible_verses (
+    book_id   TEXT,
+    chapter   INTEGER,
+    verse_num INTEGER,
+    verse_text TEXT,
+    PRIMARY KEY (book_id, chapter, verse_num)
+  )`)
+}
+
+export function getChapterVersesFromDB(bookId: string, chapter: number): Array<{verse: number, text: string}> {
+  createVersesTable()
+  const db = getDb()
+  const rows = db.prepare(
+    'SELECT verse_num, verse_text FROM bible_verses WHERE book_id=? AND chapter=? ORDER BY verse_num'
+  ).all(bookId, chapter) as any[]
+  return rows.map(r => ({ verse: r.verse_num, text: r.verse_text }))
+}
+
+export function saveVerseToDb(bookId: string, chapter: number, verseNum: number, text: string) {
+  createVersesTable()
+  const db = getDb()
+  db.prepare('INSERT OR REPLACE INTO bible_verses VALUES (?,?,?,?)').run(bookId, chapter, verseNum, text)
+}
+
 // ── AUTH FUNCTIONS ──────────────────────────────────────────────
 import crypto from 'crypto'
 

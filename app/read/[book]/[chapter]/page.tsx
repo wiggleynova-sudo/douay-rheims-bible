@@ -47,6 +47,8 @@ export default function ReadPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [fontMenuOpen, setFontMenuOpen] = useState(false)
   const [fontSize, setFontSize] = useState('md')
+  const [dbVerses, setDbVerses] = useState<{ verse: number; text: string }[]>([])
+  const [loadingVerses, setLoadingVerses] = useState(false)
 
   useEffect(() => {
     if (!localStorage.getItem('bible_session')) {
@@ -82,12 +84,26 @@ export default function ReadPage() {
   useEffect(() => {
     audioRef.current?.pause()
     setAudioPlaying(false)
+    setDbVerses([])
   }, [bookId, chapterN])
+
+  // Fetch verses from DB if this chapter has no inline text
+  useEffect(() => {
+    if (!chapter || chapter.verses.length > 0) return
+    setLoadingVerses(true)
+    fetch(`/api/verses?book=${bookId}&chapter=${chapterN}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.verses && d.verses.length > 0) setDbVerses(d.verses)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingVerses(false))
+  }, [bookId, chapterN, chapter])
 
   const readChapterAloud = async () => {
     if (audioPlaying) { audioRef.current?.pause(); setAudioPlaying(false); return }
     if (!chapter) return
-    const text = chapter.verses.map(v => v.text).join(' ')
+    const text = displayVerses.map(v => v.text).join(' ')
     setAudioPlaying(true)
     const res = await fetch('/api/tts', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -136,6 +152,7 @@ export default function ReadPage() {
 
   const prevChapter = book.chapters.find(c => c.chapter === chapterN - 1)
   const bookIdx = BIBLE_BOOKS.findIndex(b => b.id === bookId)
+  const displayVerses = dbVerses.length > 0 ? dbVerses : chapter.verses
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405', display: 'flex', flexDirection: 'column' }}>
@@ -312,7 +329,33 @@ export default function ReadPage() {
           </div>
 
           {/* ── Verse text ── */}
-          {chapter.verses.length === 0 && (
+          {chapter.verses.length === 0 && loadingVerses && (
+            <div style={{
+              textAlign: 'center', padding: '40px 20px',
+              background: '#EFE3C2', border: '1px solid #D4BC8A',
+              borderTop: '3px solid #9A7320', borderRadius: 4,
+              marginBottom: 40,
+            }}>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 14, color: '#9A7320',
+                letterSpacing: '0.2em', marginBottom: 16,
+              }}>✦</div>
+              <div style={{
+                fontFamily: 'EB Garamond, Georgia, serif',
+                fontSize: 18, fontStyle: 'italic', color: '#6A4828',
+                lineHeight: 1.7, marginBottom: 8,
+              }}>
+                Loading verses…
+              </div>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 10,
+                color: '#9A7320', letterSpacing: '0.15em',
+              }}>
+                DOUAY-RHEIMS CHALLONER REVISION, 1749
+              </div>
+            </div>
+          )}
+          {chapter.verses.length === 0 && !loadingVerses && dbVerses.length === 0 && (
             <div style={{
               textAlign: 'center', padding: '40px 20px',
               background: '#EFE3C2', border: '1px solid #D4BC8A',
@@ -339,7 +382,7 @@ export default function ReadPage() {
             </div>
           )}
           <div style={{ lineHeight: 1, marginBottom: 40 }}>
-            {chapter.verses.map((v, idx) => {
+            {displayVerses.map((v, idx) => {
               const hl = highlights.find(h => h.verse === v.verse)
               const isActive = activeVerse?.verse === v.verse
               const isDropCap = chapterN === 1 && idx === 0
