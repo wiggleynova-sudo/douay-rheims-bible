@@ -37,13 +37,17 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState('')
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null)
   const [savedFlash, setSavedFlash] = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setGenerating(false)
     setTab('commentary')
+    // After 1.5s still loading → likely generating AI commentary
+    const genTimer = setTimeout(() => setGenerating(true), 1500)
     fetch(`/api/commentary?book=${book}&chapter=${chapter}&verse=${verse}`)
       .then(r => r.json())
       .then(d => {
@@ -51,7 +55,11 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
         setCccRefs(d.cccRefs || [])
         setCrossRefs(d.crossRefs || [])
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        clearTimeout(genTimer)
+        setGenerating(false)
+        setLoading(false)
+      })
 
     const session = localStorage.getItem('bible_session') || 'default'
     fetch(`/api/note?session_id=${session}&book=${book}&chapter=${chapter}&verse=${verse}`)
@@ -220,7 +228,10 @@ export default function CommentaryDrawer({ book, chapter, verse, verseText, onCl
             fontFamily: 'EB Garamond, Georgia, serif', fontStyle: 'italic',
             color: '#8B6040', fontSize: 15, textAlign: 'center', padding: '24px 0',
           }}>
-            ✦ Loading commentary…
+            {generating
+              ? '✦ Writing commentary for this verse…'
+              : '✦ Loading commentary…'
+            }
           </div>
         )}
 
