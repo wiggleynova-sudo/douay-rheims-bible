@@ -20,10 +20,10 @@ button { font-family: inherit; }
   --verse-size: 19px;
   --verse-lh: 1.95;
 }
-[data-fsize="sm"] { --verse-size: 16px; --verse-lh: 1.85; }
-[data-fsize="md"] { --verse-size: 19px; --verse-lh: 1.95; }
-[data-fsize="lg"] { --verse-size: 23px; --verse-lh: 2.05; }
-[data-fsize="xl"] { --verse-size: 27px; --verse-lh: 2.1;  }
+[data-fsize="sm"] { --verse-size: 18px; --verse-lh: 1.9; }
+[data-fsize="md"] { --verse-size: 22px; --verse-lh: 2.0; }
+[data-fsize="lg"] { --verse-size: 26px; --verse-lh: 2.05; }
+[data-fsize="xl"] { --verse-size: 30px; --verse-lh: 2.1; }
 
 /* Church-appropriate scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 6px; }

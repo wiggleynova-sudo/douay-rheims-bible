@@ -312,6 +312,32 @@ export default function ReadPage() {
           </div>
 
           {/* ── Verse text ── */}
+          {chapter.verses.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: '40px 20px',
+              background: '#EFE3C2', border: '1px solid #D4BC8A',
+              borderTop: '3px solid #9A7320', borderRadius: 4,
+              marginBottom: 40,
+            }}>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 14, color: '#9A7320',
+                letterSpacing: '0.2em', marginBottom: 16,
+              }}>✦ ✦ ✦</div>
+              <div style={{
+                fontFamily: 'EB Garamond, Georgia, serif',
+                fontSize: 20, fontStyle: 'italic', color: '#2A1405',
+                lineHeight: 1.7, marginBottom: 16,
+              }}>
+                Full verse-by-verse text for this chapter is being typeset and will appear soon.
+              </div>
+              <div style={{
+                fontFamily: 'Cinzel, serif', fontSize: 10,
+                color: '#9A7320', letterSpacing: '0.15em',
+              }}>
+                DOUAY-RHEIMS CHALLONER REVISION, 1749
+              </div>
+            </div>
+          )}
           <div style={{ lineHeight: 1, marginBottom: 40 }}>
             {chapter.verses.map((v, idx) => {
               const hl = highlights.find(h => h.verse === v.verse)

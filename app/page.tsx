@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BIBLE_BOOKS } from '@/data/bible-data'
-import NavUserBadge from '@/components/NavUserBadge'
+import NavBar from '@/components/NavBar'
 
 export const metadata = { title: 'Douay-Rheims Catholic Bible — With Commentary' }
 
@@ -12,59 +12,7 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: '#F7F0DC', color: '#2A1405' }}>
 
       {/* ── Header / Nav ── */}
-      <header style={{
-        background: '#2A1008',
-        borderBottom: '2px solid #9A7320',
-        padding: '0 28px',
-        position: 'sticky', top: 0, zIndex: 100,
-      }}>
-        <div style={{
-          maxWidth: 1100, margin: '0 auto',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          height: 56,
-        }}>
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 22, color: '#9A7320', letterSpacing: '0.05em' }}>☧</span>
-            <div>
-              <div style={{
-                fontFamily: 'Cinzel Decorative, Cinzel, serif',
-                fontSize: 13, fontWeight: 700,
-                color: '#C9A848', letterSpacing: '0.08em',
-                lineHeight: 1.2,
-              }}>Douay-Rheims</div>
-              <div style={{
-                fontFamily: 'Cinzel, serif', fontSize: 8.5,
-                color: '#9A7320', letterSpacing: '0.18em',
-              }}>SACRED SCRIPTURE</div>
-            </div>
-          </div>
-
-          {/* Nav */}
-          <nav style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            {[
-              { href: '/study',           label: 'Study Paths', gold: true },
-              { href: '/highlights',      label: 'Highlights' },
-              { href: '/parallel/john/1', label: 'Parallel' },
-              { href: '/read/genesis/1',  label: 'Read' },
-            ].map((item, i) => (
-              <span key={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {i > 0 && <span style={{ color: '#4A2010', fontSize: 11 }}>✦</span>}
-                <Link href={item.href} style={{
-                  fontFamily: 'Cinzel, serif', fontSize: 13,
-                  letterSpacing: '0.1em',
-                  color: item.gold ? '#C9A848' : '#9A7320',
-                  textDecoration: 'none',
-                }}>
-                  {item.label.toUpperCase()}
-                </Link>
-              </span>
-            ))}
-            <span style={{ color: '#4A2010', fontSize: 11, marginLeft: 4 }}>✦</span>
-            <NavUserBadge/>
-          </nav>
-        </div>
-      </header>
+      <NavBar />
 
       {/* ── Hero ── */}
       <div style={{
